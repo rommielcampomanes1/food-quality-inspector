@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>Inspection History</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/history.css">
+
+    <style>
+        /* Make the page use the available height */
+        .history-page {
+            min-height: calc(100vh - 90px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Records stay normally at the top */
+        #records {
+            width: 100%;
+        }
+
+        /* Push Clear History to the bottom */
+        .clear-history-area {
+            margin-top: auto;
+            padding-top: 30px;
+            padding-bottom: 20px;
+            width: 100%;
+        }
+
+        /* Clear History button */
+        .clear-history-btn {
+            width: 100%;
+            padding: 13px 16px;
+
+            background: #ffffff;
+            color: #c62828;
+
+            border: 1px solid #c62828;
+            border-radius: 12px;
+
+            font-size: 14px;
+            font-weight: 700;
+
+            cursor: pointer;
+        }
+
+        .clear-history-btn:active {
+            background: #fff1f1;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<main class="phone">
+
+    <!-- TOP GREEN HEADER -->
+
+    <header class="topbar history-head">
+
+        <h1>
+            INSPECTION HISTORY
+        </h1>
+
+        <button
+            class="btn btn-outline"
+            onclick="location.href='/camera'">
+            ＋ New Inspection
+        </button>
+
+    </header>
+
+
+    <!-- HISTORY PAGE -->
+
+    <section class="page history-page">
+
+        <!-- SEARCH -->
+
+        <div class="search">
+
+            <span>⌕</span>
+
+            <input
+                id="searchInput"
+                placeholder="Search by LPO, product or supplier"
+            >
+
+        </div>
+
+
+        <!-- INSPECTION RECORDS -->
+
+        <div id="records"></div>
+
+
+        <!-- TOTAL RECORDS -->
+
+        <p
+            id="total"
+            class="total">
+        </p>
+
+
+        <!-- CLEAR HISTORY AT BOTTOM -->
+
+        <div class="clear-history-area">
+
+            <button
+                id="clearHistoryBtn"
+                class="clear-history-btn">
+
+                🗑 Clear History
+
+            </button>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<script src="/js/history.js"></script>
+
+</body>
+
+</html>

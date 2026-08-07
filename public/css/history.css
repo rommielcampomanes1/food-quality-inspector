@@ -1,0 +1,286 @@
+/* ================================
+   HISTORY HEADER
+================================ */
+
+.history-head {
+    align-items: center;
+    padding-bottom: 14px;
+}
+
+.history-head .btn {
+    padding: 10px 12px;
+    white-space: nowrap;
+}
+
+
+/* ================================
+   HISTORY PAGE
+================================ */
+
+.history-page {
+    min-height: calc(100vh - 90px);
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* ================================
+   SEARCH
+================================ */
+
+.search {
+    border: 1px solid #d7dfda;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 13px;
+    margin-bottom: 18px;
+}
+
+.search input {
+    border: 0;
+    outline: 0;
+    width: 100%;
+    padding: 14px 0;
+}
+
+
+/* ================================
+   INSPECTION RECORD
+================================ */
+
+.record {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr) 82px;
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 13px;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+}
+
+.record:hover {
+    border-color: #65a77f;
+    box-shadow: 0 5px 16px rgba(6, 93, 52, 0.08);
+}
+
+
+/* ================================
+   PRODUCT IMAGE
+================================ */
+
+.record img {
+    width: 88px;
+    height: 108px;
+    object-fit: cover;
+    border-radius: 9px;
+}
+
+
+/* ================================
+   RECORD INFORMATION
+================================ */
+
+.record h3 {
+    font-size: 15px;
+    margin: 2px 0 7px;
+    overflow-wrap: anywhere;
+}
+
+.record p {
+    font-size: 13px;
+    margin: 5px 0;
+}
+
+.product-name {
+    font-weight: 700;
+}
+
+
+/* ================================
+   DATES
+================================ */
+
+.dates {
+    display: grid;
+    gap: 3px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: #5d665f;
+}
+
+
+/* ================================
+   STATUS
+================================ */
+
+.status {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.status span {
+    display: inline-block;
+    color: #fff;
+    padding: 6px 7px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.status small {
+    margin-top: 20px;
+    color: #657068;
+}
+
+.status strong {
+    display: block;
+    font-size: 27px;
+    margin-top: 2px;
+}
+
+
+/* ================================
+   ACCEPTED
+================================ */
+
+.accepted span {
+    background: #2baa48;
+}
+
+.accepted strong {
+    color: #08763f;
+}
+
+
+/* ================================
+   REJECTED
+================================ */
+
+.rejected span {
+    background: #c91f24;
+}
+
+.rejected strong {
+    color: #c91f24;
+}
+
+
+/* ================================
+   REJECTION REASON
+================================ */
+
+.reason {
+    grid-column: 1 / -1;
+    color: #c91f24 !important;
+    border-top: 1px solid #f0dddd;
+    padding-top: 8px;
+}
+
+
+/* ================================
+   TOTAL RECORDS
+================================ */
+
+.total {
+    text-align: center;
+    color: #5e6861;
+    padding: 18px;
+}
+
+
+/* ================================
+   EMPTY HISTORY
+================================ */
+
+.empty {
+    padding: 25px;
+    text-align: center;
+}
+
+.empty p {
+    color: #68736c;
+}
+
+
+/* ================================
+   CLEAR HISTORY
+================================ */
+
+.clear-history-area {
+    margin-top: auto;
+    width: 100%;
+    padding-top: 30px;
+    padding-bottom: 20px;
+}
+
+.clear-history-btn {
+    width: 100%;
+    padding: 13px 16px;
+
+    background: #ffffff;
+    color: #c62828;
+
+    border: 1px solid #c62828;
+    border-radius: 12px;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.clear-history-btn:hover {
+    background: #fff5f5;
+}
+
+.clear-history-btn:active {
+    background: #ffeaea;
+}
+
+
+/* ================================
+   MOBILE
+================================ */
+
+@media (max-width: 380px) {
+
+    .record {
+        grid-template-columns:
+            75px minmax(0, 1fr);
+    }
+
+    .record img {
+        width: 75px;
+        height: 92px;
+    }
+
+    .status {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .status small {
+        margin: 0 0 0 auto;
+    }
+
+    .status strong {
+        margin: 0 0 0 8px;
+    }
+
+    .clear-history-area {
+        padding-top: 25px;
+        padding-bottom: 15px;
+    }
+}
