@@ -1,10 +1,12 @@
 const $ = (id) => document.getElementById(id);
 
+
 /* =========================================================
    GET CAPTURED IMAGE
 ========================================================= */
 
-const image = localStorage.getItem("inspectionImage");
+const image =
+  localStorage.getItem("inspectionImage");
 
 if (!image) {
   window.location.href = "/camera";
@@ -17,7 +19,8 @@ $("productImage").src = image;
    DEFAULT DATES
 ========================================================= */
 
-const today = new Date();
+const today =
+  new Date();
 
 const expiryDate =
   new Date(
@@ -52,6 +55,7 @@ let isSaving =
 ========================================================= */
 
 function setDecision(value) {
+
   decision = value;
 
   document
@@ -81,9 +85,11 @@ document
   .forEach((button) => {
 
     button.onclick = () => {
+
       setDecision(
         button.dataset.decision
       );
+
     };
 
   });
@@ -513,11 +519,25 @@ $("saveBtn").onclick =
         image:
           compressedImage,
 
+        /*
+          IMPORTANT:
+
+          We send the LPO field exactly as entered.
+
+          If blank:
+          server.js creates:
+          FPO20270001
+          FPO20270002
+          FPO20270003
+          etc.
+
+          If user enters 8888:
+          server.js creates:
+          FPO20278888
+        */
+
         lpo:
-          lpo ||
-          `LPO-${Date.now()
-            .toString()
-            .slice(-7)}`,
+          lpo,
 
         product:
           product ||

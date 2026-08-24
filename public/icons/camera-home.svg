@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="48"
+     height="48"
+     viewBox="0 0 48 48"
+     fill="none">
+
+  <path
+    d="M16 12L19 8H29L32 12H38C41.3 12 44 14.7 44 18V36C44 39.3 41.3 42 38 42H10C6.7 42 4 39.3 4 36V18C4 14.7 6.7 12 10 12H16Z"
+    stroke="#2F7D32"
+    stroke-width="3"
+    stroke-linejoin="round"
+  />
+
+  <circle
+    cx="24"
+    cy="27"
+    r="8"
+    stroke="#2F7D32"
+    stroke-width="3"
+  />
+
+  <circle
+    cx="37"
+    cy="18"
+    r="1.8"
+    fill="#2F7D32"
+  />
+
+</svg>

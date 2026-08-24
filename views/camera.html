@@ -2,40 +2,185 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+
   <title>Capture Image</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="/css/camera.css">
+
+  <link
+    rel="stylesheet"
+    href="/css/style.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="/css/camera.css"
+  >
 </head>
+
 <body>
+
   <main class="phone camera-page">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
     <header class="topbar camera-head">
-      <button class="icon-btn" onclick="history.back()" aria-label="Back">←</button>
-      <h1>CAPTURE IMAGE</h1>
-      <button id="galleryTop" class="icon-btn gallery-top" aria-label="Open gallery">
-        <img src="/icons/gallery.svg" alt="">
+
+      <button
+        class="icon-btn"
+        onclick="history.back()"
+        aria-label="Back"
+      >
+        ←
       </button>
+
+
+      <h1>
+        CAPTURE IMAGE
+      </h1>
+
+
+      <!-- HISTORY BUTTON -->
+
+      <button
+        class="icon-btn history-top"
+        onclick="location.href='/history'"
+        aria-label="Inspection history"
+      >
+        🕘
+      </button>
+
     </header>
 
+
+    <!-- =====================================================
+         CAMERA PREVIEW
+    ====================================================== -->
+
     <section class="camera-stage">
-      <video id="video" autoplay playsinline muted></video>
-      <img id="preview" alt="Selected product preview">
-      <div class="instruction">Center the product<br>and tap capture</div>
-      <div class="scan-frame"><i></i><i></i><i></i><i></i></div>
+
+      <video
+        id="video"
+        autoplay
+        playsinline
+        muted
+      ></video>
+
+
+      <img
+        id="preview"
+        alt="Selected product preview"
+      >
+
+
+      <div class="instruction">
+
+        Center the product
+        <br>
+        and tap capture
+
+      </div>
+
+
+      <div class="scan-frame">
+
+        <i></i>
+        <i></i>
+        <i></i>
+        <i></i>
+
+      </div>
+
     </section>
 
+
+    <!-- =====================================================
+         CAMERA CONTROLS
+    ====================================================== -->
+
     <footer class="camera-controls">
-      <button id="captureBtn" class="shutter" aria-label="Capture photo"><span></span></button>
+
+
+      <!-- EMPTY SPACE LEFT -->
+
+      <div class="camera-control-side"></div>
+
+
+      <!-- CAPTURE BUTTON CENTER -->
+
+      <button
+        id="captureBtn"
+        class="shutter"
+        aria-label="Capture photo"
+      >
+        <span></span>
+      </button>
+
+
+      <!-- GALLERY BUTTON RIGHT -->
+
+      <button
+        id="galleryTop"
+        class="gallery-bottom"
+        aria-label="Open gallery"
+      >
+
+        <img
+          src="/icons/gallery.svg"
+          alt=""
+        >
+
+        <small>
+          Gallery
+        </small>
+
+      </button>
+
+
     </footer>
 
+
+    <!-- =====================================================
+         FILE INPUTS
+    ====================================================== -->
+
+
     <!-- Opens existing photos only -->
-    <input id="galleryInput" type="file" accept="image/*" hidden>
 
-    <!-- Opens the Android rear camera directly when live preview is blocked on HTTP -->
-    <input id="cameraInput" type="file" accept="image/*" capture="environment" hidden>
+    <input
+      id="galleryInput"
+      type="file"
+      accept="image/*"
+      hidden
+    >
 
-    <canvas id="canvas" hidden></canvas>
+
+    <!-- Opens Android rear camera directly
+         when live preview is blocked -->
+
+    <input
+      id="cameraInput"
+      type="file"
+      accept="image/*"
+      capture="environment"
+      hidden
+    >
+
+
+    <canvas
+      id="canvas"
+      hidden
+    ></canvas>
+
+
   </main>
+
+
   <script src="/js/camera.js"></script>
+
 </body>
 </html>

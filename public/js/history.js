@@ -1,9 +1,24 @@
 let records = [];
 
-const box = document.getElementById("records");
-const total = document.getElementById("total");
-const searchInput = document.getElementById("searchInput");
-const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+const box =
+  document.getElementById(
+    "records"
+  );
+
+const total =
+  document.getElementById(
+    "total"
+  );
+
+const searchInput =
+  document.getElementById(
+    "searchInput"
+  );
+
+const clearHistoryBtn =
+  document.getElementById(
+    "clearHistoryBtn"
+  );
 
 
 /* =========================================================
@@ -13,6 +28,7 @@ const clearHistoryBtn = document.getElementById("clearHistoryBtn");
 const escapeHtml = (value) =>
   String(value ?? "").replace(
     /[&<>'"]/g,
+
     (character) =>
       ({
         "&": "&amp;",
@@ -22,6 +38,59 @@ const escapeHtml = (value) =>
         '"': "&quot;"
       })[character]
   );
+
+
+/* =========================================================
+   HIDDEN INSPECTIONS
+========================================================= */
+
+function getHiddenInspectionIds() {
+
+  try {
+
+    const hidden =
+      JSON.parse(
+        localStorage.getItem(
+          "hiddenInspectionIds"
+        ) || "[]"
+      );
+
+
+    return Array.isArray(hidden)
+      ? hidden.map(String)
+      : [];
+
+  }
+
+  catch (error) {
+
+    return [];
+
+  }
+
+}
+
+
+function saveHiddenInspectionIds(
+  ids
+) {
+
+  const uniqueIds =
+    [
+      ...new Set(
+        ids.map(String)
+      )
+    ];
+
+
+  localStorage.setItem(
+    "hiddenInspectionIds",
+    JSON.stringify(
+      uniqueIds
+    )
+  );
+
+}
 
 
 /* =========================================================
@@ -35,13 +104,15 @@ function openDetails(id) {
     String(id)
   );
 
+
   window.location.href =
     "/details";
+
 }
 
 
 /* =========================================================
-   LOAD HISTORY FROM SERVER
+   LOAD HISTORY FROM SUPABASE
 ========================================================= */
 
 async function loadRecords() {
@@ -50,14 +121,20 @@ async function loadRecords() {
 
     box.innerHTML = `
       <div class="empty card">
-        <b>Loading inspections...</b>
+
+        <b>
+          Loading inspections...
+        </b>
+
       </div>
     `;
+
 
     const response =
       await fetch(
         "/api/inspections"
       );
+
 
     const data =
       await response.json();
@@ -73,10 +150,21 @@ async function loadRecords() {
     }
 
 
+    const hiddenIds =
+      getHiddenInspectionIds();
+
+
     records =
-      Array.isArray(data)
-        ? data
-        : [];
+      (
+        Array.isArray(data)
+          ? data
+          : []
+      ).filter(
+        (record) =>
+          !hiddenIds.includes(
+            String(record.id)
+          )
+      );
 
 
     render(
@@ -95,11 +183,15 @@ async function loadRecords() {
 
     box.innerHTML = `
       <div class="empty card">
-        <b>Unable to load inspections</b>
+
+        <b>
+          Unable to load inspections
+        </b>
 
         <p>
           ${escapeHtml(error.message)}
         </p>
+
       </div>
     `;
 
@@ -152,7 +244,7 @@ function render(
     list
       .map(
         (record) => `
-        
+
           <button
             class="record card"
             onclick="openDetails(${Number(record.id)})"
@@ -300,12 +392,12 @@ searchInput.addEventListener(
 
 
 /* =========================================================
-   CLEAR HISTORY
+   CLEAR HISTORY FROM APP ONLY
 ========================================================= */
 
 clearHistoryBtn.addEventListener(
   "click",
-  async () => {
+  () => {
 
     if (
       records.length === 0
@@ -322,102 +414,58 @@ clearHistoryBtn.addEventListener(
 
     const confirmed =
       confirm(
-        "Are you sure you want to delete all inspection history? This will also delete all saved inspection images."
+        "Clear all current inspections from this app history?\n\nThe original records will remain safely stored in Supabase."
       );
 
 
     if (!confirmed) {
-
       return;
-
     }
 
 
-    clearHistoryBtn.disabled =
-      true;
+    const hiddenIds =
+      getHiddenInspectionIds();
 
 
-    clearHistoryBtn.textContent =
-      "Clearing...";
+    records.forEach(
+      (record) => {
 
-
-    try {
-
-      const response =
-        await fetch(
-          "/api/inspections",
-          {
-            method:
-              "DELETE"
-          }
-        );
-
-
-      const data =
-        await response.json();
-
-
-      if (!response.ok) {
-
-        throw new Error(
-          data.error ||
-          "Unable to clear history."
+        hiddenIds.push(
+          String(record.id)
         );
 
       }
+    );
 
 
-      records = [];
+    saveHiddenInspectionIds(
+      hiddenIds
+    );
 
 
-      searchInput.value =
-        "";
+    records = [];
 
 
-      localStorage.removeItem(
-        "selectedInspectionId"
-      );
+    searchInput.value =
+      "";
 
 
-      localStorage.removeItem(
-        "inspectionImage"
-      );
+    localStorage.removeItem(
+      "selectedInspectionId"
+    );
 
 
-      render();
+    localStorage.removeItem(
+      "inspectionImage"
+    );
 
 
-      alert(
-        "Inspection history has been cleared."
-      );
-
-    }
-
-    catch (error) {
-
-      console.error(
-        "Clear history error:",
-        error
-      );
+    render();
 
 
-      alert(
-        error.message ||
-        "Unable to clear inspection history."
-      );
-
-    }
-
-    finally {
-
-      clearHistoryBtn.disabled =
-        false;
-
-
-      clearHistoryBtn.textContent =
-        "🗑 Clear History";
-
-    }
+    alert(
+      "History cleared from this app. The original inspection records remain saved in Supabase."
+    );
 
   }
 );

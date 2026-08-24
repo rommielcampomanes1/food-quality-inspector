@@ -1,0 +1,23 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="48"
+  height="48"
+  viewBox="0 0 48 48"
+  fill="none"
+>
+  <path
+    d="M24 4L40 10V21C40 31.5 33.5 39.5 24 44C14.5 39.5 8 31.5 8 21V10L24 4Z"
+    stroke="#2F7D32"
+    stroke-width="3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <path
+    d="M17 24L22 29L32 18"
+    stroke="#2F7D32"
+    stroke-width="3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>

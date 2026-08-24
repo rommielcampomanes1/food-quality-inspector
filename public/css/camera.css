@@ -1,2 +1,308 @@
-.camera-page{background:#151816;color:#fff;display:grid;grid-template-rows:76px 1fr 180px}.camera-head{align-items:center;padding-bottom:12px}.camera-head h1{align-self:center}.gallery-top{font-size:27px;border:1px solid rgba(255,255,255,.35);border-radius:10px;width:44px;height:44px}.camera-stage{position:relative;overflow:hidden;background:#25211c}.camera-stage video,.camera-stage img{width:100%;height:100%;object-fit:cover}.camera-stage img{display:none}.instruction{position:absolute;top:24px;left:50%;transform:translateX(-50%);background:rgba(10,10,10,.75);padding:13px 24px;border-radius:10px;text-align:center;line-height:1.35;font-weight:700;white-space:nowrap}.scan-frame{position:absolute;inset:125px 36px 58px}.scan-frame i{position:absolute;width:42px;height:42px;border-color:#fff;border-style:solid}.scan-frame i:nth-child(1){left:0;top:0;border-width:4px 0 0 4px;border-radius:12px 0 0 0}.scan-frame i:nth-child(2){right:0;top:0;border-width:4px 4px 0 0;border-radius:0 12px 0 0}.scan-frame i:nth-child(3){left:0;bottom:0;border-width:0 0 4px 4px;border-radius:0 0 0 12px}.scan-frame i:nth-child(4){right:0;bottom:0;border-width:0 4px 4px 0;border-radius:0 0 12px 0}.camera-controls{display:grid;place-items:center;background:linear-gradient(#1b1e1c,#111312)}.shutter{width:92px;height:92px;border-radius:50%;border:5px solid white;background:transparent;padding:7px;box-shadow:0 0 0 3px #167548;cursor:pointer}.shutter span{display:block;width:100%;height:100%;border-radius:50%;background:white}.shutter:active{transform:scale(.96)}
-.gallery-top img{width:25px;height:25px;filter:brightness(0) invert(1)}
+.camera-page {
+  background: #151816;
+  color: #fff;
+  display: grid;
+  grid-template-rows: 76px 1fr 180px;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.camera-head {
+  align-items: center;
+  padding-bottom: 12px;
+}
+
+.camera-head h1 {
+  align-self: center;
+}
+
+
+/* HISTORY BUTTON - TOP RIGHT */
+
+.history-top {
+  font-size: 25px;
+  border: 1px solid rgba(255,255,255,.35);
+  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
+.camera-stage {
+  position: relative;
+  overflow: hidden;
+  background: #25211c;
+}
+
+.camera-stage video,
+.camera-stage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.camera-stage img {
+  display: none;
+}
+
+
+/* =========================================================
+   INSTRUCTION
+========================================================= */
+
+.instruction {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  background: rgba(10,10,10,.75);
+
+  padding: 13px 24px;
+
+  border-radius: 10px;
+
+  text-align: center;
+
+  line-height: 1.35;
+
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   SCAN FRAME
+========================================================= */
+
+.scan-frame {
+  position: absolute;
+  inset: 125px 36px 58px;
+}
+
+.scan-frame i {
+  position: absolute;
+
+  width: 42px;
+  height: 42px;
+
+  border-color: #fff;
+  border-style: solid;
+}
+
+
+.scan-frame i:nth-child(1) {
+  left: 0;
+  top: 0;
+
+  border-width: 4px 0 0 4px;
+
+  border-radius: 12px 0 0 0;
+}
+
+
+.scan-frame i:nth-child(2) {
+  right: 0;
+  top: 0;
+
+  border-width: 4px 4px 0 0;
+
+  border-radius: 0 12px 0 0;
+}
+
+
+.scan-frame i:nth-child(3) {
+  left: 0;
+  bottom: 0;
+
+  border-width: 0 0 4px 4px;
+
+  border-radius: 0 0 0 12px;
+}
+
+
+.scan-frame i:nth-child(4) {
+  right: 0;
+  bottom: 0;
+
+  border-width: 0 4px 4px 0;
+
+  border-radius: 0 0 12px 0;
+}
+
+
+/* =========================================================
+   BOTTOM CAMERA CONTROLS
+========================================================= */
+
+.camera-controls {
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns:
+    1fr
+    120px
+    1fr;
+
+  align-items: center;
+
+  background:
+    linear-gradient(
+      #1b1e1c,
+      #111312
+    );
+
+  padding:
+    20px
+    24px
+    28px;
+}
+
+
+/* EMPTY LEFT SIDE */
+
+.camera-control-side {
+  width: 100%;
+}
+
+
+/* =========================================================
+   CAPTURE BUTTON
+========================================================= */
+
+.shutter {
+  width: 92px;
+  height: 92px;
+
+  justify-self: center;
+
+  border-radius: 50%;
+
+  border: 5px solid white;
+
+  background: transparent;
+
+  padding: 7px;
+
+  box-shadow:
+    0 0 0 3px #167548;
+
+  cursor: pointer;
+}
+
+
+.shutter span {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  border-radius: 50%;
+
+  background: white;
+}
+
+
+.shutter:active {
+  transform: scale(.96);
+}
+
+
+/* =========================================================
+   GALLERY - BOTTOM RIGHT
+========================================================= */
+
+.gallery-bottom {
+  justify-self: end;
+
+  width: 62px;
+  min-height: 62px;
+
+  border: 0;
+
+  background: transparent;
+
+  color: white;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  cursor: pointer;
+}
+
+
+.gallery-bottom img {
+  width: 30px;
+  height: 30px;
+
+  filter:
+    brightness(0)
+    invert(1);
+}
+
+
+.gallery-bottom small {
+  color: white;
+
+  font-size: 11px;
+
+  font-weight: 700;
+
+  letter-spacing: .3px;
+}
+
+
+.gallery-bottom:active {
+  transform: scale(.95);
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+
+  .camera-controls {
+    grid-template-columns:
+      1fr
+      110px
+      1fr;
+
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+
+  .shutter {
+    width: 88px;
+    height: 88px;
+  }
+
+
+  .gallery-bottom {
+    width: 58px;
+  }
+
+}

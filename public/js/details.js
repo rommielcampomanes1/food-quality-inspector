@@ -1,9 +1,30 @@
-const id = localStorage.getItem("selectedInspectionId");
-const box = document.getElementById("details");
+const id =
+  localStorage.getItem(
+    "selectedInspectionId"
+  );
+
+const box =
+  document.getElementById(
+    "details"
+  );
+
+const removeInspectionBtn =
+  document.getElementById(
+    "removeInspectionBtn"
+  );
+
+
+/* =========================================================
+   SAFE HTML
+========================================================= */
 
 function escapeHtml(value) {
-  return String(value ?? "").replace(
+
+  return String(
+    value ?? ""
+  ).replace(
     /[&<>'"]/g,
+
     (character) =>
       ({
         "&": "&amp;",
@@ -13,48 +34,205 @@ function escapeHtml(value) {
         '"': "&quot;"
       })[character]
   );
+
 }
 
-async function loadDetails() {
+
+/* =========================================================
+   GET HIDDEN INSPECTION IDS
+========================================================= */
+
+function getHiddenInspectionIds() {
+
+  try {
+
+    const hidden =
+      JSON.parse(
+        localStorage.getItem(
+          "hiddenInspectionIds"
+        ) || "[]"
+      );
+
+
+    return Array.isArray(hidden)
+      ? hidden.map(String)
+      : [];
+
+  }
+
+  catch (error) {
+
+    return [];
+
+  }
+
+}
+
+
+/* =========================================================
+   SAVE HIDDEN INSPECTION IDS
+========================================================= */
+
+function saveHiddenInspectionIds(
+  ids
+) {
+
+  const uniqueIds =
+    [
+      ...new Set(
+        ids.map(String)
+      )
+    ];
+
+
+  localStorage.setItem(
+    "hiddenInspectionIds",
+    JSON.stringify(
+      uniqueIds
+    )
+  );
+
+}
+
+
+/* =========================================================
+   REMOVE CURRENT INSPECTION FROM APP VIEW
+========================================================= */
+
+function removeCurrentInspection() {
+
   if (!id) {
+    return;
+  }
+
+
+  const confirmed =
+    confirm(
+      "Remove this inspection from the app history?\n\nThe record will remain safely stored in Supabase."
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  const hiddenIds =
+    getHiddenInspectionIds();
+
+
+  if (
+    !hiddenIds.includes(
+      String(id)
+    )
+  ) {
+
+    hiddenIds.push(
+      String(id)
+    );
+
+  }
+
+
+  saveHiddenInspectionIds(
+    hiddenIds
+  );
+
+
+  localStorage.removeItem(
+    "selectedInspectionId"
+  );
+
+
+  alert(
+    "Inspection removed from this app. The Supabase record is still saved."
+  );
+
+
+  window.location.href =
+    "/history";
+
+}
+
+
+/* =========================================================
+   DELETE BUTTON
+========================================================= */
+
+removeInspectionBtn.addEventListener(
+  "click",
+  removeCurrentInspection
+);
+
+
+/* =========================================================
+   LOAD INSPECTION DETAILS
+========================================================= */
+
+async function loadDetails() {
+
+  if (!id) {
+
     box.innerHTML = `
       <div class="card empty">
         <b>Inspection not found.</b>
       </div>
     `;
+
+    removeInspectionBtn.style.display =
+      "none";
+
     return;
+
   }
 
+
   try {
+
     box.innerHTML = `
       <div class="card empty">
         <b>Loading inspection...</b>
       </div>
     `;
 
-    const response = await fetch(`/api/inspections/${encodeURIComponent(id)}`);
-    const record = await response.json();
+
+    const response =
+      await fetch(
+        `/api/inspections/${encodeURIComponent(id)}`
+      );
+
+
+    const record =
+      await response.json();
+
 
     if (!response.ok) {
+
       throw new Error(
         record.error ||
         "Inspection not found."
       );
+
     }
+
 
     const indicators =
       record.indicators || {};
+
 
     const decisionClass =
       String(
         record.decision || ""
       ).toLowerCase();
 
+
     const image =
       record.image ||
       "/images/placeholder.jpg";
 
+
     box.innerHTML = `
+
       <div class="detail-hero">
 
         <img
@@ -62,6 +240,7 @@ async function loadDetails() {
           alt="${escapeHtml(record.product)}"
           onerror="this.src='/images/placeholder.jpg'"
         >
+
 
         <div>
 
@@ -71,9 +250,11 @@ async function loadDetails() {
             ${escapeHtml(record.decision)}
           </span>
 
+
           <strong>
             ${Number(record.score) || 0}%
           </strong>
+
 
           <h2>
             ${escapeHtml(record.product)}
@@ -157,53 +338,75 @@ async function loadDetails() {
       <div class="card info-list">
 
         <div>
-          <span>LPO Number</span>
+
+          <span>
+            LPO Number
+          </span>
 
           <b>
             ${escapeHtml(record.lpo)}
           </b>
+
         </div>
 
 
         <div>
-          <span>Supplier</span>
+
+          <span>
+            Supplier
+          </span>
 
           <b>
             ${escapeHtml(record.supplier)}
           </b>
+
         </div>
 
 
         <div>
-          <span>Receiving Type</span>
+
+          <span>
+            Receiving Type
+          </span>
 
           <b>
             ${escapeHtml(record.receiving)}
           </b>
+
         </div>
 
 
         <div>
-          <span>Received Date</span>
+
+          <span>
+            Received Date
+          </span>
 
           <b>
             ${escapeHtml(record.received)}
           </b>
+
         </div>
 
 
         <div>
-          <span>Expiry Date</span>
+
+          <span>
+            Expiry Date
+          </span>
 
           <b>
             ${escapeHtml(record.expiry)}
           </b>
+
         </div>
 
 
         ${
           record.reason
+
             ? `
+
               <div class="reason-row">
 
                 <span>
@@ -215,7 +418,9 @@ async function loadDetails() {
                 </b>
 
               </div>
+
             `
+
             : ""
         }
 
@@ -228,13 +433,22 @@ async function loadDetails() {
       >
         ＋ NEW INSPECTION
       </button>
+
     `;
 
-  } catch (error) {
+  }
+
+  catch (error) {
+
     console.error(
       "Details loading error:",
       error
     );
+
+
+    removeInspectionBtn.style.display =
+      "none";
+
 
     box.innerHTML = `
       <div class="card empty">
@@ -249,7 +463,10 @@ async function loadDetails() {
 
       </div>
     `;
+
   }
+
 }
+
 
 loadDetails();
