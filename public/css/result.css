@@ -1,1 +1,415 @@
-.summary{display:grid;grid-template-columns:145px 1fr;gap:20px;align-items:center;margin-bottom:16px}.summary img{width:145px;height:135px;object-fit:cover;border-radius:12px}.score{display:block;color:#08693b;font-size:48px;line-height:1}.summary h2{font-size:20px;color:#08693b;margin:7px 0}.badge{display:inline-block;background:#2baa48;color:#fff;padding:7px 16px;border-radius:9px;font-weight:700}.bad-result .score,.bad-result .summary h2{color:#c91f24}.bad-result .badge{background:#c91f24}.analysis{padding:14px;margin:16px 0 20px}.analysis p{margin:8px 0 0;line-height:1.45}.indicators{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.indicators div{background:#f3f7f4;border:1px solid #dce7df;border-radius:11px;padding:10px 5px;text-align:center}.indicators span{display:block;font-size:11px;color:#67736b}.indicators b{display:block;color:#08763f;margin-top:5px}.decision{display:grid;grid-template-columns:1fr 1fr;gap:14px}.decision .btn{font-size:18px;color:#fff}.accept{background:#08763f}.reject{background:#c91f24}.decision .btn:not(.active){opacity:.5}.save{width:100%;margin:24px 0 10px;font-size:18px}.analyzing{text-align:center;padding:95px 20px}.analyzing p{color:#68736c}.spinner{width:58px;height:58px;border:5px solid #dbe9e0;border-top-color:#08763f;border-radius:50%;margin:0 auto 20px;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.error{padding:22px;margin-top:40px;text-align:center}.error p{line-height:1.5;color:#a02127}.error .btn{margin-top:10px}
+/* =========================================================
+   RESULT SUMMARY
+========================================================= */
+
+.summary{
+  display:grid;
+  grid-template-columns:145px 1fr;
+  gap:20px;
+  align-items:center;
+  margin-bottom:16px;
+}
+
+.summary img{
+  width:145px;
+  height:135px;
+  object-fit:cover;
+  border-radius:12px;
+}
+
+.score{
+  display:block;
+  color:#08693b;
+  font-size:48px;
+  line-height:1;
+}
+
+.summary h2{
+  font-size:20px;
+  color:#08693b;
+  margin:7px 0;
+}
+
+.badge{
+  display:inline-block;
+  background:#2baa48;
+  color:#fff;
+  padding:7px 16px;
+  border-radius:9px;
+  font-weight:700;
+}
+
+.bad-result .score,
+.bad-result .summary h2{
+  color:#c91f24;
+}
+
+.bad-result .badge{
+  background:#c91f24;
+}
+
+
+/* =========================================================
+   QUALITY INDICATORS
+========================================================= */
+
+.indicators{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:7px;
+  margin-bottom:20px;
+}
+
+.indicators div{
+  background:#f3f7f4;
+  border:1px solid #dce7df;
+  border-radius:11px;
+  padding:10px 3px;
+  text-align:center;
+  min-width:0;
+}
+
+.indicators span{
+  display:block;
+  font-size:10px;
+  color:#67736b;
+  white-space:nowrap;
+}
+
+.indicators b{
+  display:block;
+  color:#08763f;
+  margin-top:5px;
+  font-size:15px;
+}
+
+
+/* =========================================================
+   SUPPLIER PRODUCT RATING
+========================================================= */
+
+.rating-field{
+  width:100%;
+  margin:6px 0 20px;
+}
+
+.rating-field label{
+  display:block;
+  font-weight:700;
+  font-size:14px;
+  margin-bottom:10px;
+}
+
+
+/* STAR CONTAINER */
+
+.star-rating{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  align-items:center;
+  justify-items:center;
+
+  width:100%;
+  max-width:330px;
+
+  margin:0 auto;
+
+  padding:8px 6px;
+  box-sizing:border-box;
+}
+
+
+/* INDIVIDUAL STAR */
+
+.star-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  width:52px;
+  height:52px;
+
+  padding:0;
+  margin:0;
+
+  border:0;
+  outline:0;
+
+  background:transparent;
+
+  color:#cfd7d2;
+
+  font-size:42px;
+  line-height:1;
+
+  cursor:pointer;
+
+  transition:
+    color .15s ease,
+    transform .12s ease;
+}
+
+
+/* HOVER */
+
+.star-btn:hover{
+  transform:scale(1.10);
+}
+
+
+/* CLICK */
+
+.star-btn:active{
+  transform:scale(.94);
+}
+
+
+/* SELECTED STAR */
+
+.star-btn.selected{
+  color:#e6aa00;
+}
+
+
+/* =========================================================
+   AI ANALYSIS
+========================================================= */
+
+.analysis{
+  padding:16px;
+  margin:16px 0 20px;
+}
+
+.analysis-title{
+  display:block;
+  font-size:18px;
+  font-weight:700;
+  margin-bottom:14px;
+}
+
+
+/* CLASSIFICATION ROW */
+
+.analysis-classification{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  width:100%;
+
+  gap:15px;
+
+  padding-bottom:11px;
+  margin-bottom:12px;
+
+  border-bottom:1px solid #e1e8e3;
+}
+
+.analysis-classification span{
+  color:#68736c;
+  font-size:12px;
+}
+
+.analysis-classification strong{
+  color:#08763f;
+  font-size:13px;
+  font-weight:700;
+  text-align:right;
+}
+
+
+/* AI TEXT */
+
+.analysis p{
+  margin:0;
+  line-height:1.55;
+}
+
+
+/* =========================================================
+   DECISION
+========================================================= */
+
+.decision{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+.decision .btn{
+  font-size:18px;
+  color:#fff;
+}
+
+.accept{
+  background:#08763f;
+}
+
+.reject{
+  background:#c91f24;
+}
+
+.decision .btn:not(.active){
+  opacity:.5;
+}
+
+
+/* =========================================================
+   SAVE
+========================================================= */
+
+.save{
+  width:100%;
+  margin:24px 0 10px;
+  font-size:18px;
+}
+
+
+/* =========================================================
+   ANALYZING
+========================================================= */
+
+.analyzing{
+  text-align:center;
+  padding:95px 20px;
+}
+
+.analyzing p{
+  color:#68736c;
+}
+
+.spinner{
+  width:58px;
+  height:58px;
+
+  border:5px solid #dbe9e0;
+  border-top-color:#08763f;
+
+  border-radius:50%;
+
+  margin:0 auto 20px;
+
+  animation:spin .8s linear infinite;
+}
+
+@keyframes spin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.error{
+  padding:22px;
+  margin-top:40px;
+  text-align:center;
+}
+
+.error p{
+  line-height:1.5;
+  color:#a02127;
+}
+
+.error .btn{
+  margin-top:10px;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width:480px){
+
+  .summary{
+    grid-template-columns:110px 1fr;
+    gap:14px;
+  }
+
+  .summary img{
+    width:110px;
+    height:105px;
+  }
+
+  .score{
+    font-size:40px;
+  }
+
+
+  /* QUALITY INDICATORS */
+
+  .indicators{
+    grid-template-columns:repeat(5,1fr);
+    gap:5px;
+  }
+
+  .indicators div{
+    padding:9px 2px;
+  }
+
+  .indicators span{
+    font-size:9px;
+  }
+
+  .indicators b{
+    font-size:14px;
+  }
+
+
+  /* STARS */
+
+  .star-rating{
+    width:100%;
+    max-width:300px;
+    padding:7px 4px;
+  }
+
+  .star-btn{
+    width:48px;
+    height:48px;
+    font-size:39px;
+  }
+
+
+  /* AI ANALYSIS */
+
+  .analysis{
+    padding:15px;
+  }
+
+  .analysis-title{
+    font-size:17px;
+  }
+
+  .analysis-classification span{
+    font-size:11px;
+  }
+
+  .analysis-classification strong{
+    font-size:12px;
+  }
+
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES
+========================================================= */
+
+@media (max-width:360px){
+
+  .star-rating{
+    max-width:270px;
+  }
+
+  .star-btn{
+    width:43px;
+    height:43px;
+    font-size:35px;
+  }
+
+}

@@ -49,32 +49,100 @@ let decision =
 let isSaving =
   false;
 
+let supplierRating =
+  0;
+
+
+/* =========================================================
+   SUPPLIER STAR RATING
+========================================================= */
+
+const starButtons =
+  document.querySelectorAll(
+    ".star-btn"
+  );
+
+
+function updateStars(
+  rating
+) {
+
+  starButtons.forEach(
+    (star) => {
+
+      const starValue =
+        Number(
+          star.dataset.rating
+        );
+
+      star.classList.toggle(
+        "selected",
+        starValue <= rating
+      );
+
+    }
+  );
+
+}
+
+
+starButtons.forEach(
+  (star) => {
+
+    star.addEventListener(
+      "click",
+      () => {
+
+        supplierRating =
+          Number(
+            star.dataset.rating
+          );
+
+        updateStars(
+          supplierRating
+        );
+
+      }
+    );
+
+  }
+);
+
 
 /* =========================================================
    ACCEPT / REJECT
 ========================================================= */
 
-function setDecision(value) {
+function setDecision(
+  value
+) {
 
-  decision = value;
+  decision =
+    value;
+
 
   document
     .querySelectorAll(
       "[data-decision]"
     )
-    .forEach((button) => {
+    .forEach(
+      (button) => {
 
-      button.classList.toggle(
-        "active",
-        button.dataset.decision === value
-      );
+        button.classList.toggle(
+          "active",
+          button.dataset.decision === value
+        );
 
-    });
+      }
+    );
 
-  $("rejectBox").classList.toggle(
-    "hidden",
-    value !== "REJECTED"
-  );
+
+  $("rejectBox")
+    .classList.toggle(
+      "hidden",
+      value !== "REJECTED"
+    );
+
 }
 
 
@@ -82,17 +150,58 @@ document
   .querySelectorAll(
     "[data-decision]"
   )
-  .forEach((button) => {
+  .forEach(
+    (button) => {
 
-    button.onclick = () => {
+      button.onclick =
+        () => {
 
-      setDecision(
-        button.dataset.decision
-      );
+          setDecision(
+            button.dataset.decision
+          );
 
-    };
+        };
 
-  });
+    }
+  );
+
+
+/* =========================================================
+   SAFE NUMBER
+========================================================= */
+
+function safeNumber(
+  value
+) {
+
+  const number =
+    Number(
+      value
+    );
+
+
+  if (
+    !Number.isFinite(
+      number
+    )
+  ) {
+
+    return 0;
+
+  }
+
+
+  return Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(
+        number
+      )
+    )
+  );
+
+}
 
 
 /* =========================================================
@@ -107,16 +216,22 @@ async function analyze() {
       await fetch(
         "/api/analyze",
         {
-          method: "POST",
+
+          method:
+            "POST",
 
           headers: {
+
             "Content-Type":
               "application/json"
+
           },
 
-          body: JSON.stringify({
-            image
-          })
+          body:
+            JSON.stringify({
+              image
+            })
+
         }
       );
 
@@ -135,61 +250,123 @@ async function analyze() {
     }
 
 
-    aiResult = data;
+    aiResult =
+      data;
 
 
-    /* SCORE */
+    /* =====================================================
+       MAIN SCORE
+    ====================================================== */
 
     $("score").textContent =
-      `${data.score}%`;
+      `${safeNumber(
+        data.score
+      )}%`;
 
 
-    /* QUALITY */
+    /* =====================================================
+       QUALITY
+    ====================================================== */
 
     $("quality").textContent =
-      data.quality;
+      data.quality ||
+      "Unknown Quality";
 
 
-    /* GRADE */
+    /* =====================================================
+       GRADE
+    ====================================================== */
 
     $("grade").textContent =
-      data.grade;
+      data.grade ||
+      "--";
 
 
-    /* AI ANALYSIS */
+    /* =====================================================
+       MAIN AI ANALYSIS
+    ====================================================== */
 
     $("analysisText").textContent =
-      data.analysis;
+      data.analysis ||
+      "No quality analysis available.";
 
 
-    /* PRODUCT */
+    /* =====================================================
+       PRODUCT
+    ====================================================== */
 
     $("product").value =
       data.product ||
       "Fresh Product";
 
 
-    /* INDICATORS */
+    /* =====================================================
+       INDICATORS
+    ====================================================== */
+
+    const indicators =
+      data.indicators ||
+      {};
+
 
     $("freshness").textContent =
-      `${data.indicators.freshness}%`;
+      `${safeNumber(
+        indicators.freshness
+      )}%`;
+
 
     $("color").textContent =
-      `${data.indicators.color}%`;
+      `${safeNumber(
+        indicators.color
+      )}%`;
+
 
     $("surface").textContent =
-      `${data.indicators.surface}%`;
+      `${safeNumber(
+        indicators.surface
+      )}%`;
+
 
     $("damage").textContent =
-      `${data.indicators.damage}%`;
+      `${safeNumber(
+        indicators.damage
+      )}%`;
 
 
-    /* DECISION */
+    /* =====================================================
+       SIZE
+    ====================================================== */
+
+    $("sizeScore").textContent =
+      `${safeNumber(
+        data.sizeScore
+      )}%`;
+
+
+    $("sizeClassification").textContent =
+      data.sizeClassification ||
+      "Not Determined";
+
+
+    /*
+      sizeAnalysis is still returned by Gemini
+      and saved to Supabase.
+
+      We no longer display it separately because
+      the main AI analysis already includes size.
+    */
+
+
+    /* =====================================================
+       DECISION
+    ====================================================== */
 
     const bad =
       data.suggestedDecision ===
         "REJECTED" ||
-      data.score < 60;
+      safeNumber(
+        data.score
+      ) < 60;
 
 
     document.body
@@ -206,7 +383,9 @@ async function analyze() {
     );
 
 
-    /* AUTO SELECT REJECTION REASON */
+    /* =====================================================
+       AUTO SELECT REJECTION REASON
+    ====================================================== */
 
     if (
       bad &&
@@ -218,9 +397,15 @@ async function analyze() {
           ...$("reason").options
         ].find(
           (option) =>
+
             option.text
+              .trim()
               .toLowerCase() ===
-            data.suggestedReason
+
+            String(
+              data.suggestedReason
+            )
+              .trim()
               .toLowerCase()
         );
 
@@ -235,7 +420,9 @@ async function analyze() {
     }
 
 
-    /* SHOW RESULT */
+    /* =====================================================
+       SHOW RESULT
+    ====================================================== */
 
     $("analyzing")
       .classList.add(
@@ -265,7 +452,8 @@ async function analyze() {
 
 
     $("errorText").textContent =
-      error.message;
+      error.message ||
+      "Analysis failed.";
 
 
     $("errorBox")
@@ -279,7 +467,7 @@ async function analyze() {
 
 
 /* =========================================================
-   COMPRESS IMAGE BEFORE SERVER SAVE
+   COMPRESS IMAGE
 ========================================================= */
 
 function compressImage(
@@ -289,84 +477,92 @@ function compressImage(
 ) {
 
   return new Promise(
-    (resolve, reject) => {
+    (
+      resolve,
+      reject
+    ) => {
 
       const img =
         new Image();
 
 
-      img.onload = () => {
+      img.onload =
+        () => {
 
-        const scale =
-          Math.min(
-            1,
-            maxWidth / img.width
+          const scale =
+            Math.min(
+              1,
+              maxWidth /
+              img.width
+            );
+
+
+          const width =
+            Math.round(
+              img.width *
+              scale
+            );
+
+
+          const height =
+            Math.round(
+              img.height *
+              scale
+            );
+
+
+          const canvas =
+            document.createElement(
+              "canvas"
+            );
+
+
+          canvas.width =
+            width;
+
+          canvas.height =
+            height;
+
+
+          const context =
+            canvas.getContext(
+              "2d"
+            );
+
+
+          context.drawImage(
+            img,
+            0,
+            0,
+            width,
+            height
           );
 
 
-        const width =
-          Math.round(
-            img.width * scale
+          const compressed =
+            canvas.toDataURL(
+              "image/jpeg",
+              quality
+            );
+
+
+          resolve(
+            compressed
           );
 
+        };
 
-        const height =
-          Math.round(
-            img.height * scale
+
+      img.onerror =
+        () => {
+
+          reject(
+            new Error(
+              "Unable to process inspection image."
+            )
           );
 
-
-        const canvas =
-          document.createElement(
-            "canvas"
-          );
-
-
-        canvas.width =
-          width;
-
-        canvas.height =
-          height;
-
-
-        const context =
-          canvas.getContext(
-            "2d"
-          );
-
-
-        context.drawImage(
-          img,
-          0,
-          0,
-          width,
-          height
-        );
-
-
-        const compressed =
-          canvas.toDataURL(
-            "image/jpeg",
-            quality
-          );
-
-
-        resolve(
-          compressed
-        );
-
-      };
-
-
-      img.onerror = () => {
-
-        reject(
-          new Error(
-            "Unable to process inspection image."
-          )
-        );
-
-      };
+        };
 
 
       img.src =
@@ -379,7 +575,7 @@ function compressImage(
 
 
 /* =========================================================
-   SAVE INSPECTION TO SERVER
+   SAVE INSPECTION
 ========================================================= */
 
 $("saveBtn").onclick =
@@ -389,11 +585,15 @@ $("saveBtn").onclick =
       isSaving ||
       !aiResult
     ) {
+
       return;
+
     }
 
 
-    /* FIELD VALUES */
+    /* =====================================================
+       VALUES
+    ====================================================== */
 
     const lpo =
       $("lpo")
@@ -424,12 +624,15 @@ $("saveBtn").onclick =
 
 
     const reason =
-      decision === "REJECTED"
+      decision ===
+        "REJECTED"
         ? $("reason").value
         : "";
 
 
-    /* VALIDATION */
+    /* =====================================================
+       VALIDATION
+    ====================================================== */
 
     if (!supplier) {
 
@@ -468,6 +671,20 @@ $("saveBtn").onclick =
 
 
     if (
+      supplierRating < 1 ||
+      supplierRating > 5
+    ) {
+
+      alert(
+        "Please select a supplier product rating."
+      );
+
+      return;
+
+    }
+
+
+    if (
       decision ===
         "REJECTED" &&
       !reason
@@ -482,7 +699,9 @@ $("saveBtn").onclick =
     }
 
 
-    /* PREVENT MULTIPLE SAVES */
+    /* =====================================================
+       SAVING STATE
+    ====================================================== */
 
     isSaving =
       true;
@@ -502,7 +721,9 @@ $("saveBtn").onclick =
 
     try {
 
-      /* COMPRESS IMAGE */
+      /* ===================================================
+         COMPRESS IMAGE
+      ==================================================== */
 
       const compressedImage =
         await compressImage(
@@ -512,68 +733,96 @@ $("saveBtn").onclick =
         );
 
 
-      /* CREATE RECORD */
+      /* ===================================================
+         CREATE INSPECTION
+      ==================================================== */
 
       const inspection = {
 
         image:
           compressedImage,
 
-        /*
-          IMPORTANT:
 
-          We send the LPO field exactly as entered.
+        lpo,
 
-          If blank:
-          server.js creates:
-          FPO20270001
-          FPO20270002
-          FPO20270003
-          etc.
-
-          If user enters 8888:
-          server.js creates:
-          FPO20278888
-        */
-
-        lpo:
-          lpo,
 
         product:
           product ||
           aiResult.product,
 
+
         supplier,
+
 
         receiving,
 
+
         received,
+
 
         expiry,
 
+
+        /* QUALITY */
+
         score:
-          aiResult.score,
+          safeNumber(
+            aiResult.score
+          ),
+
 
         quality:
           aiResult.quality,
 
+
         grade:
           aiResult.grade,
+
 
         analysis:
           aiResult.analysis,
 
+
         indicators:
           aiResult.indicators,
 
+
+        /* SIZE */
+
+        sizeScore:
+          safeNumber(
+            aiResult.sizeScore
+          ),
+
+
+        sizeClassification:
+          aiResult.sizeClassification ||
+          "Not Determined",
+
+
+        sizeAnalysis:
+          aiResult.sizeAnalysis ||
+          "",
+
+
+        /* SUPPLIER RATING */
+
+        supplierRating,
+
+
+        /* DECISION */
+
         decision,
+
 
         reason
 
       };
 
 
-      /* SEND TO SERVER */
+      /* ===================================================
+         SEND TO SERVER
+      ==================================================== */
 
       const response =
         await fetch(
@@ -613,7 +862,9 @@ $("saveBtn").onclick =
       }
 
 
-      /* SAVE ONLY ID LOCALLY */
+      /* ===================================================
+         SAVE ID
+      ==================================================== */
 
       localStorage.setItem(
         "selectedInspectionId",
@@ -623,14 +874,18 @@ $("saveBtn").onclick =
       );
 
 
-      /* DELETE LARGE TEMP IMAGE */
+      /* ===================================================
+         REMOVE TEMP IMAGE
+      ==================================================== */
 
       localStorage.removeItem(
         "inspectionImage"
       );
 
 
-      /* GO TO HISTORY */
+      /* ===================================================
+         HISTORY
+      ==================================================== */
 
       window.location.href =
         "/history";
@@ -660,7 +915,7 @@ $("saveBtn").onclick =
 
 
       saveBtn.textContent =
-        "SAVE INSPECTION";
+        "▣ SAVE INSPECTION";
 
     }
 
@@ -668,7 +923,9 @@ $("saveBtn").onclick =
 
 
 /* =========================================================
-   START ANALYSIS
+   START
 ========================================================= */
+
+updateStars(0);
 
 analyze();

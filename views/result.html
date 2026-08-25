@@ -1,16 +1,623 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Inspection Result</title><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/result.css"></head><body><main class="phone"><header class="topbar"><button class="icon-btn" onclick="location.href='/camera'">←</button><h1>INSPECTION RESULT</h1><span></span></header><section class="page">
-<div id="analyzing" class="analyzing"><div class="spinner"></div><b>Analyzing product image…</b><p>Please wait while the visible quality is checked.</p></div>
-<div id="resultContent" class="hidden">
-<div class="summary"><img id="productImage" src="/images/homepage.png"><div><strong id="score" class="score">--%</strong><h2 id="quality">Analyzing</h2><span id="grade" class="badge">--</span></div></div>
-<div class="indicators"><div><span>Freshness</span><b id="freshness">--</b></div><div><span>Color</span><b id="color">--</b></div><div><span>Surface</span><b id="surface">--</b></div><div><span>Damage</span><b id="damage">--</b></div></div>
-<div class="card analysis"><b>AI Analysis</b><p id="analysisText"></p></div>
-<div class="field"><label>Product Name</label><input id="product" placeholder="Detected product"></div>
-<div class="field"><label>Farm / Supplier Name</label><select id="supplier"><option>KAUSHIK PRADIPBHAI FOODSTUFF TRADING LLC</option><option>Fruitex International Trading L.L.C</option><option>Elite global fresh trading - sole proprietorship LLC</option><option>Green Agri Foodstuff Trading LLC</option><option>ESG FARMS OPERATIONS - L.L.C - S.P.C</option><option>MUSTADAMA FARMS - L.L.C - O.P.C</option><option>ALFIRDOUS VEGETABLES AND FOODSTUFF TRADING L L C</option><option>Happy Fruits Foodstuffs Trading LLC</option><option>RBR KRISHI CARE FARMS L.L.C</option><option>Yasin Badsha Foodstuff Trading LLC</option><option>Other Farm</option></select></div>
-<div class="field"><label>Receiving Type</label><select id="receiving"><option>Warehouse Receiving</option><option>Delivery</option><option>Dispatch</option><option>Return to Client</option></select></div>
-<div class="field"><label>LPO Number</label><input id="lpo" placeholder="Enter LPO Number"></div>
-<div class="row"><div class="field"><label>Received Date</label><input id="received" type="date"></div><div class="field"><label>Expiry Date</label><input id="expiry" type="date"></div></div>
-<h3>Inspection Decision</h3><div class="decision"><button class="btn accept" data-decision="ACCEPTED">✓ ACCEPT</button><button class="btn reject" data-decision="REJECTED">✕ REJECT</button></div>
-<div id="rejectBox" class="field hidden"><label>Reason for Rejection</label><select id="reason"><option>Damaged</option><option>Rotten</option><option>Mold</option><option>Bruised</option><option>Poor Color</option><option>Poor Texture</option><option>Pest Damage</option><option>Foreign Object</option><option>Expired</option><option>Temperature Issue</option><option>Packaging Damage</	option><option>Wrong Product</	option><option>Other</	option></select></div>
-<button id="saveBtn" class="btn btn-primary save">▣ SAVE INSPECTION</button></div>
-<div id="errorBox" class="card error hidden"><b>Analysis could not be completed</b><p id="errorText"></p><button class="btn btn-primary" onclick="location.reload()">Try Again</button></div>
-</section></main><script src="/js/result.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+  <title>Inspection Result</title>
+
+  <link
+    rel="stylesheet"
+    href="/css/style.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="/css/result.css"
+  >
+</head>
+
+
+<body>
+
+<main class="phone">
+
+
+  <!-- =====================================================
+       HEADER
+  ====================================================== -->
+
+  <header class="topbar">
+
+    <button
+      class="icon-btn"
+      onclick="location.href='/camera'"
+      aria-label="Back"
+    >
+      ←
+    </button>
+
+    <h1>
+      INSPECTION RESULT
+    </h1>
+
+    <span></span>
+
+  </header>
+
+
+  <section class="page">
+
+
+    <!-- =====================================================
+         ANALYZING
+    ====================================================== -->
+
+    <div
+      id="analyzing"
+      class="analyzing"
+    >
+
+      <div class="spinner"></div>
+
+      <b>
+        Analyzing product image…
+      </b>
+
+      <p>
+        Please wait while the visible quality is checked.
+      </p>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         RESULT CONTENT
+    ====================================================== -->
+
+    <div
+      id="resultContent"
+      class="hidden"
+    >
+
+
+      <!-- =================================================
+           RESULT SUMMARY
+      ================================================== -->
+
+      <div class="summary">
+
+        <img
+          id="productImage"
+          src="/images/homepage.png"
+          alt="Inspected product"
+        >
+
+
+        <div>
+
+          <strong
+            id="score"
+            class="score"
+          >
+            --%
+          </strong>
+
+
+          <h2 id="quality">
+            Analyzing
+          </h2>
+
+
+          <span
+            id="grade"
+            class="badge"
+          >
+            --
+          </span>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- =================================================
+           QUALITY INDICATORS
+      ================================================== -->
+
+      <div class="indicators">
+
+        <div>
+          <span>Freshness</span>
+          <b id="freshness">--</b>
+        </div>
+
+
+        <div>
+          <span>Color</span>
+          <b id="color">--</b>
+        </div>
+
+
+        <div>
+          <span>Surface</span>
+          <b id="surface">--</b>
+        </div>
+
+
+        <div>
+          <span>Damage</span>
+          <b id="damage">--</b>
+        </div>
+
+
+        <div>
+          <span>Size</span>
+          <b id="sizeScore">--</b>
+        </div>
+
+      </div>
+
+
+
+      <!-- =================================================
+           SUPPLIER PRODUCT RATING
+      ================================================== -->
+
+      <div class="rating-field">
+
+        <label>
+          Supplier Product Rating
+        </label>
+
+
+        <div
+          class="star-rating"
+          id="starRating"
+          role="radiogroup"
+          aria-label="Supplier Product Rating"
+        >
+
+          <button
+            type="button"
+            class="star-btn"
+            data-rating="1"
+            aria-label="1 star"
+          >
+            ★
+          </button>
+
+
+          <button
+            type="button"
+            class="star-btn"
+            data-rating="2"
+            aria-label="2 stars"
+          >
+            ★
+          </button>
+
+
+          <button
+            type="button"
+            class="star-btn"
+            data-rating="3"
+            aria-label="3 stars"
+          >
+            ★
+          </button>
+
+
+          <button
+            type="button"
+            class="star-btn"
+            data-rating="4"
+            aria-label="4 stars"
+          >
+            ★
+          </button>
+
+
+          <button
+            type="button"
+            class="star-btn"
+            data-rating="5"
+            aria-label="5 stars"
+          >
+            ★
+          </button>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- =================================================
+           AI ANALYSIS
+      ================================================== -->
+
+      <div class="card analysis">
+
+        <b class="analysis-title">
+          AI Analysis
+        </b>
+
+
+        <div class="analysis-classification">
+
+          <span>
+            Classification
+          </span>
+
+          <strong id="sizeClassification">
+            --
+          </strong>
+
+        </div>
+
+
+        <p id="analysisText">
+        </p>
+
+      </div>
+
+
+
+      <!-- =================================================
+           PRODUCT NAME
+      ================================================== -->
+
+      <div class="field">
+
+        <label>
+          Product Name
+        </label>
+
+
+        <input
+          id="product"
+          placeholder="Detected product"
+        >
+
+      </div>
+
+
+
+      <!-- =================================================
+           FARM / SUPPLIER
+      ================================================== -->
+
+      <div class="field">
+
+        <label>
+          Farm / Supplier Name
+        </label>
+
+
+        <select id="supplier">
+
+          <option value="">
+            Select Supplier
+          </option>
+
+          <option>
+            KAUSHIK PRADIPBHAI FOODSTUFF TRADING LLC
+          </option>
+
+          <option>
+            Fruitex International Trading L.L.C
+          </option>
+
+          <option>
+            Elite global fresh trading - sole proprietorship LLC
+          </option>
+
+          <option>
+            Green Agri Foodstuff Trading LLC
+          </option>
+
+          <option>
+            ESG FARMS OPERATIONS - L.L.C - S.P.C
+          </option>
+
+          <option>
+            MUSTADAMA FARMS - L.L.C - O.P.C
+          </option>
+
+          <option>
+            ALFIRDOUS VEGETABLES AND FOODSTUFF TRADING L L C
+          </option>
+
+          <option>
+            Happy Fruits Foodstuffs Trading LLC
+          </option>
+
+          <option>
+            RBR KRISHI CARE FARMS L.L.C
+          </option>
+
+          <option>
+            Yasin Badsha Foodstuff Trading LLC
+          </option>
+
+          <option>
+            Other Farm
+          </option>
+
+        </select>
+
+      </div>
+
+
+
+      <!-- =================================================
+           RECEIVING TYPE
+      ================================================== -->
+
+      <div class="field">
+
+        <label>
+          Receiving Type
+        </label>
+
+
+        <select id="receiving">
+
+          <option>
+            Warehouse Receiving
+          </option>
+
+          <option>
+            Delivery
+          </option>
+
+          <option>
+            Dispatch
+          </option>
+
+          <option>
+            Return to Client
+          </option>
+
+        </select>
+
+      </div>
+
+
+
+      <!-- =================================================
+           LPO NUMBER
+      ================================================== -->
+
+      <div class="field">
+
+        <label>
+          LPO Number
+        </label>
+
+
+        <input
+          id="lpo"
+          placeholder="Enter LPO Number"
+        >
+
+      </div>
+
+
+
+      <!-- =================================================
+           DATES
+      ================================================== -->
+
+      <div class="row">
+
+
+        <div class="field">
+
+          <label>
+            Received Date
+          </label>
+
+
+          <input
+            id="received"
+            type="date"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Expiry Date
+          </label>
+
+
+          <input
+            id="expiry"
+            type="date"
+          >
+
+        </div>
+
+
+      </div>
+
+
+
+      <!-- =================================================
+           INSPECTION DECISION
+      ================================================== -->
+
+      <h3>
+        Inspection Decision
+      </h3>
+
+
+      <div class="decision">
+
+
+        <button
+          type="button"
+          class="btn accept"
+          data-decision="ACCEPTED"
+        >
+          ✓ ACCEPT
+        </button>
+
+
+        <button
+          type="button"
+          class="btn reject"
+          data-decision="REJECTED"
+        >
+          ✕ REJECT
+        </button>
+
+
+      </div>
+
+
+
+      <!-- =================================================
+           REJECTION REASON
+      ================================================== -->
+
+      <div
+        id="rejectBox"
+        class="field hidden"
+      >
+
+        <label>
+          Reason for Rejection
+        </label>
+
+
+        <select id="reason">
+
+          <option value="">
+            Select Reason
+          </option>
+
+          <option>
+            Damaged
+          </option>
+
+          <option>
+            Rotten
+          </option>
+
+          <option>
+            Mold
+          </option>
+
+          <option>
+            Bruised
+          </option>
+
+          <option>
+            Poor Color
+          </option>
+
+          <option>
+            Poor Texture
+          </option>
+
+          <option>
+            Pest Damage
+          </option>
+
+          <option>
+            Foreign Object
+          </option>
+
+          <option>
+            Expired
+          </option>
+
+          <option>
+            Temperature Issue
+          </option>
+
+          <option>
+            Packaging Damage
+          </option>
+
+          <option>
+            Wrong Product
+          </option>
+
+          <option>
+            Other
+          </option>
+
+        </select>
+
+      </div>
+
+
+
+      <!-- =================================================
+           SAVE INSPECTION
+      ================================================== -->
+
+      <button
+        id="saveBtn"
+        class="btn btn-primary save"
+      >
+        ▣ SAVE INSPECTION
+      </button>
+
+
+    </div>
+
+
+
+    <!-- =====================================================
+         ERROR
+    ====================================================== -->
+
+    <div
+      id="errorBox"
+      class="card error hidden"
+    >
+
+      <b>
+        Analysis could not be completed
+      </b>
+
+
+      <p id="errorText">
+      </p>
+
+
+      <button
+        class="btn btn-primary"
+        onclick="location.reload()"
+      >
+        Try Again
+      </button>
+
+    </div>
+
+
+  </section>
+
+</main>
+
+
+<script src="/js/result.js"></script>
+
+
+</body>
+
+</html>

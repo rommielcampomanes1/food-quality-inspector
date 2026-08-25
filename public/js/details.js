@@ -159,10 +159,54 @@ function removeCurrentInspection() {
    DELETE BUTTON
 ========================================================= */
 
-removeInspectionBtn.addEventListener(
-  "click",
-  removeCurrentInspection
-);
+if (removeInspectionBtn) {
+
+  removeInspectionBtn.addEventListener(
+    "click",
+    removeCurrentInspection
+  );
+
+}
+
+
+/* =========================================================
+   STAR DISPLAY
+========================================================= */
+
+function getStarRating(
+  rating
+) {
+
+  const value =
+    Math.max(
+      0,
+      Math.min(
+        5,
+        Number(rating) || 0
+      )
+    );
+
+
+  let stars = "";
+
+
+  for (
+    let i = 1;
+    i <= 5;
+    i++
+  ) {
+
+    stars +=
+      i <= value
+        ? "★"
+        : "☆";
+
+  }
+
+
+  return stars;
+
+}
 
 
 /* =========================================================
@@ -179,8 +223,10 @@ async function loadDetails() {
       </div>
     `;
 
-    removeInspectionBtn.style.display =
-      "none";
+    if (removeInspectionBtn) {
+      removeInspectionBtn.style.display =
+        "none";
+    }
 
     return;
 
@@ -231,6 +277,29 @@ async function loadDetails() {
       "/images/placeholder.jpg";
 
 
+    const sizeScore =
+      Number(
+        record.sizeScore
+      ) || 0;
+
+
+    const sizeClassification =
+      record.sizeClassification ||
+      "Not Determined";
+
+
+    const supplierRating =
+      Number(
+        record.supplierRating
+      ) || 0;
+
+
+    const stars =
+      getStarRating(
+        supplierRating
+      );
+
+
     box.innerHTML = `
 
       <div class="detail-hero">
@@ -265,11 +334,38 @@ async function loadDetails() {
       </div>
 
 
+      <div class="supplier-rating-detail">
+
+        <span>
+          Supplier Product Rating
+        </span>
+
+        <strong>
+          ${escapeHtml(stars)}
+        </strong>
+
+      </div>
+
+
       <div class="card detail-card">
 
         <h3>
           AI Analysis
         </h3>
+
+
+        <div class="detail-classification">
+
+          <span>
+            Classification
+          </span>
+
+          <b>
+            ${escapeHtml(sizeClassification)}
+          </b>
+
+        </div>
+
 
         <p>
           ${
@@ -283,7 +379,7 @@ async function loadDetails() {
       </div>
 
 
-      <div class="indicator-grid">
+      <div class="indicator-grid indicator-grid-five">
 
         <div>
           <span>Freshness</span>
@@ -329,6 +425,15 @@ async function loadDetails() {
               indicators.damage ??
               "--"
             }%
+          </b>
+        </div>
+
+
+        <div>
+          <span>Size</span>
+
+          <b>
+            ${sizeScore}%
           </b>
         </div>
 
@@ -446,8 +551,12 @@ async function loadDetails() {
     );
 
 
-    removeInspectionBtn.style.display =
-      "none";
+    if (removeInspectionBtn) {
+
+      removeInspectionBtn.style.display =
+        "none";
+
+    }
 
 
     box.innerHTML = `

@@ -50,7 +50,9 @@
 .detail-hero{
   display:grid;
   grid-template-columns:150px 1fr;
+
   gap:18px;
+
   align-items:center;
 }
 
@@ -94,7 +96,6 @@
   border-radius:7px;
 
   font-size:12px;
-
   font-weight:800;
 }
 
@@ -104,6 +105,45 @@
 
 .status-pill.rejected{
   background:#c91f24;
+}
+
+
+/* =========================================================
+   SUPPLIER PRODUCT RATING
+========================================================= */
+
+.supplier-rating-detail{
+  margin-top:18px;
+  margin-bottom:18px;
+
+  padding:14px 16px;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  gap:15px;
+
+  background:#f7faf8;
+
+  border:1px solid #dce8e0;
+  border-radius:12px;
+}
+
+.supplier-rating-detail span{
+  color:#68736c;
+
+  font-size:13px;
+}
+
+.supplier-rating-detail strong{
+  color:#e6aa00;
+
+  font-size:27px;
+
+  letter-spacing:3px;
+
+  white-space:nowrap;
 }
 
 
@@ -118,11 +158,46 @@
 }
 
 .detail-card h3{
-  margin:0 0 8px;
+  margin:0 0 12px;
+
+  font-size:18px;
 }
 
+
+/* CLASSIFICATION ROW */
+
+.detail-classification{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  gap:15px;
+
+  padding-bottom:10px;
+  margin-bottom:12px;
+
+  border-bottom:1px solid #e4ebe6;
+}
+
+.detail-classification span{
+  color:#68736c;
+
+  font-size:12px;
+}
+
+.detail-classification b{
+  color:#08763f;
+
+  font-size:13px;
+
+  text-align:right;
+}
+
+
+/* AI ANALYSIS TEXT */
+
 .detail-card p{
-  line-height:1.5;
+  line-height:1.55;
 
   margin:0;
 }
@@ -142,6 +217,14 @@
   margin-bottom:18px;
 }
 
+
+/* 5 INDICATORS */
+
+.indicator-grid-five{
+  grid-template-columns:repeat(5,1fr);
+}
+
+
 .indicator-grid div{
   padding:14px;
 
@@ -150,6 +233,8 @@
   background:#f2f7f4;
 
   border:1px solid #dce8e0;
+
+  min-width:0;
 }
 
 .indicator-grid span{
@@ -230,10 +315,12 @@
    MOBILE
 ========================================================= */
 
-@media(max-width:420px){
+@media(max-width:480px){
 
   .detail-hero{
     grid-template-columns:120px 1fr;
+
+    gap:14px;
   }
 
   .detail-hero img{
@@ -243,6 +330,97 @@
 
   .detail-hero strong{
     font-size:36px;
+  }
+
+
+  /* RATING */
+
+  .supplier-rating-detail{
+    padding:12px 14px;
+  }
+
+  .supplier-rating-detail strong{
+    font-size:22px;
+
+    letter-spacing:2px;
+  }
+
+
+  /* 5 INDICATORS */
+
+  .indicator-grid-five{
+    grid-template-columns:repeat(5,1fr);
+
+    gap:5px;
+  }
+
+  .indicator-grid-five div{
+    padding:10px 3px;
+
+    text-align:center;
+  }
+
+  .indicator-grid-five span{
+    font-size:9px;
+
+    white-space:nowrap;
+  }
+
+  .indicator-grid-five b{
+    font-size:14px;
+  }
+
+
+  /* AI ANALYSIS */
+
+  .detail-card{
+    padding:15px;
+  }
+
+  .detail-card h3{
+    font-size:17px;
+  }
+
+  .detail-classification span{
+    font-size:11px;
+  }
+
+  .detail-classification b{
+    font-size:12px;
+  }
+
+}
+
+
+/* =========================================================
+   VERY SMALL PHONE
+========================================================= */
+
+@media(max-width:360px){
+
+  .detail-hero{
+    grid-template-columns:105px 1fr;
+  }
+
+  .detail-hero img{
+    width:105px;
+    height:105px;
+  }
+
+  .detail-hero strong{
+    font-size:32px;
+  }
+
+  .supplier-rating-detail strong{
+    font-size:19px;
+  }
+
+  .indicator-grid-five span{
+    font-size:8px;
+  }
+
+  .indicator-grid-five b{
+    font-size:13px;
   }
 
 }
