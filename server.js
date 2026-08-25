@@ -153,7 +153,6 @@ function parseBase64Image(
   const mimeType =
     match[1];
 
-
   const base64Data =
     match[2];
 
@@ -659,6 +658,7 @@ Analyze the uploaded food product image carefully and objectively.
 
 Your assessment must be based ONLY on what is clearly visible in the image.
 
+
 =========================================================
 CORE PRINCIPLE
 =========================================================
@@ -683,9 +683,10 @@ If several strawberries are visible:
 If many products are visible:
 "The visible products appear..."
 
-You may use the word "batch" only when it is naturally appropriate to the actual visible scene.
+You may use the word "batch" only when it is naturally appropriate.
 
 Do not repeatedly use the word "batch".
+
 
 =========================================================
 ANALYZE EVERYTHING CLEARLY VISIBLE
@@ -703,9 +704,12 @@ Do NOT focus only on:
 - the worst-looking item
 - the item in the center
 
-If multiple pieces of the same product are clearly visible, consider all of them.
+If multiple pieces of the same product are clearly visible,
+consider all of them.
 
-If only one product is visible, inspect that individual product.
+If only one product is visible,
+inspect that individual product.
+
 
 =========================================================
 VISUAL HONESTY
@@ -731,7 +735,8 @@ Do NOT invent:
 
 unless there is visible evidence supporting the conclusion.
 
-If something cannot be confidently determined from the image, say so naturally.
+If something cannot be confidently determined from the image,
+say so naturally.
 
 If part of a product is:
 
@@ -746,13 +751,16 @@ do not assume its condition.
 
 Never claim that hidden surfaces were inspected.
 
-If image quality limits the inspection, mention the limitation.
+If image quality limits the inspection,
+mention the limitation.
+
 
 =========================================================
 PRODUCT IDENTIFICATION
 =========================================================
 
-Identify the main visible food product as specifically as reasonably possible.
+Identify the main visible food product as specifically
+as reasonably possible.
 
 Examples:
 
@@ -768,7 +776,9 @@ Fish
 Chicken
 Beef
 
-Do not invent a specific variety if the variety cannot be confidently identified visually.
+Do not invent a specific variety if the variety
+cannot be confidently identified visually.
+
 
 =========================================================
 QUALITY INSPECTION
@@ -792,7 +802,9 @@ Evaluate visible characteristics including:
 - deterioration
 - abnormal visible defects
 
-Only discuss characteristics that can reasonably be assessed from the image.
+Only discuss characteristics that can reasonably
+be assessed from the image.
+
 
 =========================================================
 FRESHNESS
@@ -819,6 +831,7 @@ Do NOT claim:
 
 from the image.
 
+
 =========================================================
 COLOR
 =========================================================
@@ -842,6 +855,7 @@ Consider:
 - ripening differences
 
 Do not penalize normal natural color variation.
+
 
 =========================================================
 SURFACE
@@ -868,6 +882,7 @@ Consider visible:
 - contamination
 
 Only evaluate surfaces that are actually visible.
+
 
 =========================================================
 DAMAGE
@@ -896,33 +911,141 @@ Consider:
 - severe scars
 - physical deterioration
 
-Minor natural imperfections should not automatically cause rejection.
+Minor natural imperfections should not automatically
+cause rejection.
+
 
 =========================================================
 SIZE INSPECTION
 =========================================================
 
-Also evaluate visible product size consistency.
+You must evaluate TWO different aspects of visible size:
 
-sizeScore must be between 0 and 100.
+1. SIZE CATEGORY
+2. SIZE UNIFORMITY
 
-When MULTIPLE pieces of the same product are clearly visible, compare their RELATIVE apparent sizes.
+These are different.
 
-Use:
+SIZE CATEGORY describes whether the visible product
+appears generally:
 
-90-100
-Uniform visible sizes.
+- Small
+- Medium
+- Large
+- Mixed
+- Unable to Determine
 
-75-89
-Mostly uniform with minor size variation.
+SIZE UNIFORMITY describes how similar the visible
+pieces are to each other.
 
-50-74
-Noticeably mixed sizes.
 
-0-49
-Highly mixed sizes with major visible variation.
+=========================================================
+SIZE CATEGORY
+=========================================================
 
-sizeClassification must be EXACTLY one of:
+Return a field called:
+
+sizeCategory
+
+sizeCategory must be EXACTLY one of:
+
+"Small"
+"Medium"
+"Large"
+"Mixed"
+"Unable to Determine"
+
+
+Use "Small" when the clearly visible products generally
+appear small for that type of product.
+
+Use "Medium" when the clearly visible products generally
+appear medium or typical in apparent size for that type
+of product.
+
+Use "Large" when the clearly visible products generally
+appear large for that type of product.
+
+Use "Mixed" when clearly visible pieces include meaningfully
+different apparent size categories, such as small and large
+pieces together.
+
+Use "Unable to Determine" when the image does not provide
+enough visual information to make a reasonable size-category
+assessment.
+
+
+=========================================================
+IMPORTANT SIZE CATEGORY RULES
+=========================================================
+
+Size category is a VISUAL ESTIMATE only.
+
+Do NOT pretend it is an exact physical measurement.
+
+Do NOT invent:
+
+- centimeters
+- millimeters
+- inches
+- grams
+- kilograms
+- exact dimensions
+- exact diameter
+- exact thickness
+- exact weight
+
+unless a reliable measurement reference is clearly visible.
+
+Consider the normal visual proportions of the identified
+product when making Small / Medium / Large judgments.
+
+For example, assess a cucumber relative to the normal
+appearance of cucumbers, a tomato relative to tomatoes,
+an apple relative to apples, and so on.
+
+Do NOT use the same physical-size expectation for
+different types of food.
+
+A visually small watermelon is not equivalent to a
+visually small strawberry.
+
+The classification must be PRODUCT-RELATIVE.
+
+
+=========================================================
+CAMERA PERSPECTIVE
+=========================================================
+
+Camera perspective can make a product appear larger
+or smaller.
+
+An item close to the camera may appear larger.
+
+An item farther from the camera may appear smaller.
+
+Take perspective into account.
+
+Do NOT classify an item as Large only because it is
+closer to the camera.
+
+If perspective, cropping, distance, or image angle makes
+size category unreliable, use:
+
+"Unable to Determine"
+
+rather than inventing a size.
+
+
+=========================================================
+SIZE UNIFORMITY
+=========================================================
+
+Return a field called:
+
+sizeUniformity
+
+sizeUniformity must be EXACTLY one of:
 
 "Uniform"
 "Mostly Uniform"
@@ -930,71 +1053,128 @@ sizeClassification must be EXACTLY one of:
 "Highly Mixed Size"
 "Single Product"
 
-=========================================================
-SIZE RULES
-=========================================================
 
-If multiple products are visible:
+Also return:
 
-Compare their apparent relative sizes.
+sizeScore
 
-If similar:
-give a higher sizeScore.
+sizeScore must be between 0 and 100.
 
-If noticeably different:
-reduce the sizeScore.
 
-If strongly different:
-use "Mixed Size" or "Highly Mixed Size" as appropriate.
+When MULTIPLE pieces of the same product are clearly visible:
 
-Take camera perspective into account.
+90-100 =
+Uniform visible sizes.
 
-An item closer to the camera may appear larger.
+75-89 =
+Mostly uniform with minor size variation.
 
-Do not treat perspective alone as real size variation.
+50-74 =
+Noticeably mixed sizes.
 
-If perspective makes comparison unreliable, mention that.
+0-49 =
+Highly mixed sizes with major visible variation.
+
 
 If only ONE product is clearly visible:
 
-sizeClassification must be:
+sizeUniformity must be:
 
 "Single Product"
 
-Do not pretend to evaluate size consistency between products.
 
-sizeAnalysis should explain that size consistency cannot be compared from a single visible item.
+For one product, do not pretend to compare uniformity
+between multiple pieces.
 
-Do NOT estimate:
 
-- centimeters
-- millimeters
-- grams
-- kilograms
-- exact dimensions
-- exact weight
+=========================================================
+SIZE CATEGORY + SIZE UNIFORMITY EXAMPLES
+=========================================================
 
-unless a reliable visible measurement reference exists.
+Example:
 
-Judge relative visible size only.
+Several cucumbers appear medium in apparent size and
+are very similar to each other.
+
+sizeCategory:
+"Medium"
+
+sizeUniformity:
+"Uniform"
+
+
+Example:
+
+Several tomatoes appear generally large but show
+minor variation.
+
+sizeCategory:
+"Large"
+
+sizeUniformity:
+"Mostly Uniform"
+
+
+Example:
+
+Visible cucumbers include clearly small, medium,
+and large pieces.
+
+sizeCategory:
+"Mixed"
+
+sizeUniformity:
+"Mixed Size"
+
+
+Example:
+
+One apple is visible and it appears medium in
+apparent size.
+
+sizeCategory:
+"Medium"
+
+sizeUniformity:
+"Single Product"
+
+
+Example:
+
+The camera is too close and there is no reliable
+visual context for size.
+
+sizeCategory:
+"Unable to Determine"
+
+sizeUniformity may still be determined if multiple
+pieces can reasonably be compared to one another.
+
 
 =========================================================
 SIZE ANALYSIS
 =========================================================
 
-sizeAnalysis is stored separately for QC records.
+Return:
+
+sizeAnalysis
+
+This is stored separately for QC records.
 
 Keep it brief and factual.
 
+Mention both apparent category and uniformity when possible.
+
 Examples:
 
-"The three visible cucumbers show noticeable apparent size variation."
+"The visible cucumbers appear generally medium in size and mostly uniform, with minor variation."
 
-"The visible tomatoes are mostly similar in apparent size, with minor natural variation."
+"The visible tomatoes include small and large pieces, resulting in mixed apparent sizing."
 
-"Only one tomato is visible, so size consistency between products cannot be assessed."
+"The single visible apple appears medium in apparent size, but uniformity cannot be compared from one item."
 
-Do not automatically use the word "batch".
+"The apparent size category cannot be determined reliably because of camera perspective."
+
 
 =========================================================
 MAIN AI ANALYSIS
@@ -1014,15 +1194,28 @@ When relevant, discuss:
 - coloration
 - surface condition
 - visible damage or defects
+- apparent size category
 - size consistency
 - differences between visible pieces
 - overall visible quality
 
-IMPORTANT:
-
 SIZE MUST BE DISCUSSED NATURALLY INSIDE THE SAME MAIN ANALYSIS.
 
-Do NOT create a separate size-analysis paragraph inside the "analysis" field.
+For example, natural wording may include:
+
+"The visible cucumbers appear generally medium in size
+and mostly uniform, with only minor variation."
+
+or:
+
+"The visible tomatoes show mixed apparent sizing,
+including smaller and larger pieces."
+
+Do NOT claim exact centimeters or weight unless a reliable
+measurement reference is clearly visible.
+
+Do NOT create a separate size-analysis paragraph inside
+the main analysis.
 
 Do not repeatedly use the word "batch".
 
@@ -1032,43 +1225,13 @@ Use natural phrases such as:
 
 "appears"
 "visible"
+"apparent size"
 "no obvious signs"
 "based on the visible condition"
 "cannot be confidently determined from this image"
 
 when appropriate.
 
-=========================================================
-EXAMPLE — MULTIPLE PRODUCTS
-=========================================================
-
-If three cucumbers are visible and look healthy but differ in size, an appropriate style would be:
-
-"The three visible cucumbers appear fresh and in good overall condition, with healthy green coloration and no obvious signs of rot, mold, or significant surface damage. Their apparent sizes vary noticeably, with one cucumber appearing smaller while another is longer and thicker. Based on the visible condition, the products appear acceptable overall, although their sizing is not uniform."
-
-Do NOT copy this example automatically.
-
-Describe the actual uploaded image.
-
-=========================================================
-EXAMPLE — SINGLE PRODUCT
-=========================================================
-
-If one tomato is visible and appears healthy:
-
-"The visible tomato appears fresh and in good overall condition, with healthy red coloration and no obvious signs of mold, rot, bruising, or significant surface damage. Because only one tomato is visible, size consistency between products cannot be assessed. Based on the visible condition, the tomato appears acceptable."
-
-Do NOT copy this example automatically.
-
-=========================================================
-EXAMPLE — UNCERTAIN IMAGE
-=========================================================
-
-If the image is blurry or does not show enough detail:
-
-"The visible product can be identified, but the image does not provide enough detail to confidently assess all surface characteristics. No obvious severe deterioration is visible, although a clearer or closer image would provide a more reliable quality assessment."
-
-Do not invent defects simply to make the response detailed.
 
 =========================================================
 OVERALL SCORE
@@ -1076,15 +1239,23 @@ OVERALL SCORE
 
 score must be between 0 and 100.
 
-The overall score should reflect the complete visible quality assessment.
+The overall score should reflect the complete visible
+quality assessment.
 
-Do not automatically give 90-100 simply because the product is recognizable.
+Do not automatically give 90-100 simply because the
+product is recognizable.
 
 Use the full score range when justified.
 
-Healthy appearance, appropriate coloration, good apparent freshness, clean surfaces, and little visible damage should generally increase the score.
+Healthy appearance, appropriate coloration, good apparent
+freshness, clean surfaces, and little visible damage
+should generally increase the score.
 
 Repeated or severe visible defects should reduce the score.
+
+Size variation alone should not automatically make the
+overall food quality poor.
+
 
 =========================================================
 QUALITY DECISION
@@ -1119,11 +1290,16 @@ or
 
 Use ACCEPTED when the visible condition appears acceptable.
 
-Use REJECTED when clearly visible defects are sufficiently serious or widespread to justify rejection.
+Use REJECTED when clearly visible defects are sufficiently
+serious or widespread to justify rejection.
 
-Do not reject a product only because of minor natural imperfections.
+Do not reject a product only because of minor natural
+imperfections.
 
-Size variation alone should NOT automatically cause rejection unless the size inconsistency is severe enough to represent a meaningful QC concern.
+Size variation alone should NOT automatically cause
+rejection unless the visible size inconsistency represents
+a meaningful QC concern.
+
 
 =========================================================
 REJECTION REASON
@@ -1132,6 +1308,7 @@ REJECTION REASON
 If suggestedDecision is "ACCEPTED":
 
 suggestedReason must be an empty string.
+
 
 If suggestedDecision is "REJECTED":
 
@@ -1149,6 +1326,7 @@ Prefer one of these when applicable:
 "Foreign Object"
 "Packaging Damage"
 "Other"
+
 
 =========================================================
 RETURN FORMAT
@@ -1175,11 +1353,13 @@ Use exactly this structure:
     "damage": 0
   },
   "sizeScore": 0,
-  "sizeClassification": "Uniform",
-  "sizeAnalysis": "brief internal QC description of visible size consistency",
+  "sizeCategory": "Medium",
+  "sizeUniformity": "Mostly Uniform",
+  "sizeAnalysis": "brief internal QC description of visible size category and uniformity",
   "suggestedDecision": "ACCEPTED",
   "suggestedReason": ""
 }
+
 
 =========================================================
 FINAL RULES
@@ -1195,7 +1375,11 @@ FINAL RULES
 - Describe uncertainty when evidence is insufficient.
 - Use natural wording based on what is actually visible.
 - Do not automatically call multiple products a "batch".
-- Include visible size observations naturally in the main analysis.
+- Include apparent size category naturally in the main analysis.
+- Include visible size uniformity naturally in the main analysis.
+- Small / Medium / Large must be product-relative visual estimates.
+- Use "Mixed" when meaningful different apparent size categories are visible together.
+- Use "Unable to Determine" when apparent size category cannot be reasonably assessed.
 - score must be 0-100.
 - freshness must be 0-100.
 - color must be 0-100.
@@ -1503,7 +1687,17 @@ FINAL RULES
         );
 
 
-      const allowedSizeClassifications =
+      const allowedSizeCategories =
+        [
+          "Small",
+          "Medium",
+          "Large",
+          "Mixed",
+          "Unable to Determine"
+        ];
+
+
+      const allowedSizeUniformities =
         [
           "Uniform",
           "Mostly Uniform",
@@ -1513,12 +1707,40 @@ FINAL RULES
         ];
 
 
-      result.sizeClassification =
-        allowedSizeClassifications.includes(
-          result.sizeClassification
+      result.sizeCategory =
+        allowedSizeCategories.includes(
+          result.sizeCategory
         )
-          ? result.sizeClassification
+          ? result.sizeCategory
+          : "Unable to Determine";
+
+
+      result.sizeUniformity =
+        allowedSizeUniformities.includes(
+          result.sizeUniformity
+        )
+          ? result.sizeUniformity
           : "Mixed Size";
+
+
+      /*
+        IMPORTANT:
+
+        We combine the two new Gemini values into the
+        EXISTING sizeClassification field.
+
+        This means NO new Supabase column is required.
+
+        Examples:
+
+        Medium — Mostly Uniform
+        Large — Uniform
+        Mixed — Mixed Size
+        Small — Single Product
+      */
+
+      result.sizeClassification =
+        `${result.sizeCategory} — ${result.sizeUniformity}`;
 
 
       result.sizeAnalysis =
