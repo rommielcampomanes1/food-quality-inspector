@@ -379,6 +379,11 @@ function mapInspectionRow(
       "",
 
 
+    estimatedSize:
+      row.estimated_size ||
+      "Unable to Estimate",
+
+
     /* SUPPLIER STAR RATING */
 
     supplierRating:
@@ -421,10 +426,6 @@ async function getFinalFpo(
     ).trim();
 
 
-  /* =====================================================
-     USER ENTERED LPO / FPO NUMBER
-  ====================================================== */
-
   if (raw) {
 
     const cleaned =
@@ -453,10 +454,6 @@ async function getFinalFpo(
 
   }
 
-
-  /* =====================================================
-     BLANK FIELD → NEXT FPO NUMBER
-  ====================================================== */
 
   const {
     data,
@@ -919,10 +916,11 @@ cause rejection.
 SIZE INSPECTION
 =========================================================
 
-You must evaluate TWO different aspects of visible size:
+You must evaluate THREE different aspects of visible size:
 
 1. SIZE CATEGORY
 2. SIZE UNIFORMITY
+3. ESTIMATED PHYSICAL SIZE
 
 These are different.
 
@@ -937,6 +935,9 @@ appears generally:
 
 SIZE UNIFORMITY describes how similar the visible
 pieces are to each other.
+
+ESTIMATED PHYSICAL SIZE provides an approximate visible
+measurement in centimeters when reasonably possible.
 
 
 =========================================================
@@ -967,48 +968,26 @@ Use "Large" when the clearly visible products generally
 appear large for that type of product.
 
 Use "Mixed" when clearly visible pieces include meaningfully
-different apparent size categories, such as small and large
-pieces together.
+different apparent size categories.
 
 Use "Unable to Determine" when the image does not provide
-enough visual information to make a reasonable size-category
-assessment.
+enough visual information.
 
 
 =========================================================
-IMPORTANT SIZE CATEGORY RULES
+SIZE CATEGORY RULES
 =========================================================
 
-Size category is a VISUAL ESTIMATE only.
-
-Do NOT pretend it is an exact physical measurement.
-
-Do NOT invent:
-
-- centimeters
-- millimeters
-- inches
-- grams
-- kilograms
-- exact dimensions
-- exact diameter
-- exact thickness
-- exact weight
-
-unless a reliable measurement reference is clearly visible.
+Size category is a VISUAL ESTIMATE.
 
 Consider the normal visual proportions of the identified
 product when making Small / Medium / Large judgments.
 
-For example, assess a cucumber relative to the normal
-appearance of cucumbers, a tomato relative to tomatoes,
-an apple relative to apples, and so on.
+Assess cucumber relative to cucumbers, tomato relative
+to tomatoes, apple relative to apples, and so on.
 
 Do NOT use the same physical-size expectation for
 different types of food.
-
-A visually small watermelon is not equivalent to a
-visually small strawberry.
 
 The classification must be PRODUCT-RELATIVE.
 
@@ -1030,11 +1009,9 @@ Do NOT classify an item as Large only because it is
 closer to the camera.
 
 If perspective, cropping, distance, or image angle makes
-size category unreliable, use:
+the category unreliable, use:
 
 "Unable to Determine"
-
-rather than inventing a size.
 
 
 =========================================================
@@ -1088,7 +1065,102 @@ between multiple pieces.
 
 
 =========================================================
-SIZE CATEGORY + SIZE UNIFORMITY EXAMPLES
+ESTIMATED PHYSICAL SIZE
+=========================================================
+
+Return a field called:
+
+estimatedSize
+
+estimatedSize is the approximate visible physical size
+of the main product in centimeters.
+
+Prefer a RANGE instead of one exact number.
+
+Good examples:
+
+"Approx. 18–22 cm"
+"Approx. 6–8 cm diameter"
+"Approx. 10–14 cm"
+"Unable to Estimate"
+
+
+For elongated products such as:
+
+- cucumber
+- carrot
+- zucchini
+- eggplant
+- banana
+- fish
+
+estimate the visible LENGTH when reasonably possible.
+
+
+For generally round products such as:
+
+- tomato
+- apple
+- orange
+- onion
+- lemon
+
+estimate the visible DIAMETER when reasonably possible.
+
+
+For leafy or irregular products, use the most meaningful
+visible dimension only when a reasonable estimate can be made.
+
+
+If multiple pieces are visible, return a representative
+visible range covering the clearly visible products.
+
+Example:
+
+If several cucumbers appear to range approximately
+from 16 cm to 22 cm in visible length, return:
+
+"Approx. 16–22 cm"
+
+
+If tomatoes appear approximately 5 cm to 7 cm across, return:
+
+"Approx. 5–7 cm diameter"
+
+
+IMPORTANT:
+
+This is a visual estimate, NOT an exact measurement.
+
+Never present the estimate as laboratory-measured,
+ruler-measured, or exact.
+
+Camera distance, lens perspective, cropping and viewing
+angle can affect apparent size.
+
+If the image does not provide enough visual context for
+a reasonable approximate centimeter estimate, return exactly:
+
+"Unable to Estimate"
+
+Do NOT force a centimeter estimate when confidence is low.
+
+Do NOT return percentages for estimatedSize.
+
+Do NOT return values such as:
+
+"80%"
+"90%"
+"75%"
+
+estimatedSize must contain an approximate centimeter
+measurement or:
+
+"Unable to Estimate"
+
+
+=========================================================
+SIZE CATEGORY + UNIFORMITY EXAMPLES
 =========================================================
 
 Example:
@@ -1139,18 +1211,6 @@ sizeUniformity:
 "Single Product"
 
 
-Example:
-
-The camera is too close and there is no reliable
-visual context for size.
-
-sizeCategory:
-"Unable to Determine"
-
-sizeUniformity may still be determined if multiple
-pieces can reasonably be compared to one another.
-
-
 =========================================================
 SIZE ANALYSIS
 =========================================================
@@ -1163,24 +1223,31 @@ This is stored separately for QC records.
 
 Keep it brief and factual.
 
-Mention both apparent category and uniformity when possible.
+Mention apparent category, uniformity, and estimated
+physical size when possible.
 
 Examples:
 
-"The visible cucumbers appear generally medium in size and mostly uniform, with minor variation."
+"The visible cucumbers appear generally medium in size,
+mostly uniform, and approximately 18–22 cm in visible length."
 
-"The visible tomatoes include small and large pieces, resulting in mixed apparent sizing."
+"The visible tomatoes include smaller and larger pieces,
+with an estimated visible diameter range of approximately
+5–8 cm."
 
-"The single visible apple appears medium in apparent size, but uniformity cannot be compared from one item."
+"The single visible apple appears medium in apparent size,
+with an estimated visible diameter of approximately 7–9 cm."
 
-"The apparent size category cannot be determined reliably because of camera perspective."
+"The physical size cannot be reliably estimated because
+the image does not provide sufficient scale or perspective."
 
 
 =========================================================
-MAIN AI ANALYSIS
+QUALITY ASSESSMENT
 =========================================================
 
-The "analysis" field is the MAIN analysis shown to the QC user.
+The "analysis" field is the MAIN QUALITY ASSESSMENT
+shown to the QC user.
 
 It must be ONE complete natural paragraph.
 
@@ -1196,26 +1263,27 @@ When relevant, discuss:
 - visible damage or defects
 - apparent size category
 - size consistency
+- estimated physical size
 - differences between visible pieces
 - overall visible quality
 
-SIZE MUST BE DISCUSSED NATURALLY INSIDE THE SAME MAIN ANALYSIS.
+SIZE SHOULD BE DISCUSSED NATURALLY INSIDE THE SAME
+QUALITY ASSESSMENT when a reasonable estimate is available.
 
-For example, natural wording may include:
+Example:
 
-"The visible cucumbers appear generally medium in size
-and mostly uniform, with only minor variation."
+"The visible cucumbers appear fresh with healthy green
+coloration and generally clean surfaces. They appear
+medium in size and mostly uniform, with an estimated
+visible length of approximately 18–22 cm. No major visible
+damage or deterioration is apparent."
 
-or:
+If estimatedSize is "Unable to Estimate", do not invent
+a centimeter measurement in the quality assessment.
 
-"The visible tomatoes show mixed apparent sizing,
-including smaller and larger pieces."
-
-Do NOT claim exact centimeters or weight unless a reliable
-measurement reference is clearly visible.
-
-Do NOT create a separate size-analysis paragraph inside
-the main analysis.
+Instead, naturally state that physical size cannot be
+reliably estimated from the image if that information
+is important to the assessment.
 
 Do not repeatedly use the word "batch".
 
@@ -1225,6 +1293,8 @@ Use natural phrases such as:
 
 "appears"
 "visible"
+"estimated"
+"approximately"
 "apparent size"
 "no obvious signs"
 "based on the visible condition"
@@ -1345,7 +1415,7 @@ Use exactly this structure:
   "score": 0,
   "quality": "Good Quality",
   "grade": "Good",
-  "analysis": "one complete natural analysis of everything relevant and clearly visible in the image",
+  "analysis": "one complete natural quality assessment of everything relevant and clearly visible in the image",
   "indicators": {
     "freshness": 0,
     "color": 0,
@@ -1355,7 +1425,8 @@ Use exactly this structure:
   "sizeScore": 0,
   "sizeCategory": "Medium",
   "sizeUniformity": "Mostly Uniform",
-  "sizeAnalysis": "brief internal QC description of visible size category and uniformity",
+  "estimatedSize": "Approx. 18–22 cm",
+  "sizeAnalysis": "brief internal QC description of visible size category, uniformity and estimated size",
   "suggestedDecision": "ACCEPTED",
   "suggestedReason": ""
 }
@@ -1370,16 +1441,19 @@ FINAL RULES
 - Never intentionally focus on only one product when several are clearly visible.
 - Never assume hidden conditions.
 - Never invent defects.
-- Never invent measurements.
 - Never claim smell, taste, internal condition, temperature, or firmness from an image.
 - Describe uncertainty when evidence is insufficient.
 - Use natural wording based on what is actually visible.
 - Do not automatically call multiple products a "batch".
-- Include apparent size category naturally in the main analysis.
-- Include visible size uniformity naturally in the main analysis.
+- Include apparent size category naturally in the quality assessment.
+- Include visible size uniformity naturally in the quality assessment.
+- Include estimated centimeter size only when reasonably possible.
+- estimatedSize must NEVER be a percentage.
+- Prefer an estimated range instead of false precision.
 - Small / Medium / Large must be product-relative visual estimates.
 - Use "Mixed" when meaningful different apparent size categories are visible together.
 - Use "Unable to Determine" when apparent size category cannot be reasonably assessed.
+- Use "Unable to Estimate" when a reasonable centimeter estimate cannot be made.
 - score must be 0-100.
 - freshness must be 0-100.
 - color must be 0-100.
@@ -1547,8 +1621,6 @@ FINAL RULES
           });
 
       }
-
-
       /* =====================================================
          READ GEMINI RESULT
       ====================================================== */
@@ -1723,24 +1795,37 @@ FINAL RULES
           : "Mixed Size";
 
 
-      /*
-        IMPORTANT:
-
-        We combine the two new Gemini values into the
-        EXISTING sizeClassification field.
-
-        This means NO new Supabase column is required.
-
-        Examples:
-
-        Medium — Mostly Uniform
-        Large — Uniform
-        Mixed — Mixed Size
-        Small — Single Product
-      */
-
       result.sizeClassification =
         `${result.sizeCategory} — ${result.sizeUniformity}`;
+
+
+      /* =====================================================
+         ESTIMATED SIZE IN CM
+      ====================================================== */
+
+      result.estimatedSize =
+        typeof result.estimatedSize ===
+          "string" &&
+        result.estimatedSize.trim()
+          ? result.estimatedSize.trim()
+          : "Unable to Estimate";
+
+
+      /*
+        Protect the UI from Gemini accidentally returning
+        a percentage for estimatedSize.
+      */
+
+      if (
+        /^\s*\d+(?:\.\d+)?\s*%\s*$/.test(
+          result.estimatedSize
+        )
+      ) {
+
+        result.estimatedSize =
+          "Unable to Estimate";
+
+      }
 
 
       result.sizeAnalysis =
@@ -1792,7 +1877,7 @@ FINAL RULES
           "string" &&
         result.analysis.trim()
           ? result.analysis.trim()
-          : "No detailed analysis was returned.";
+          : "No detailed quality assessment was returned.";
 
 
       if (
@@ -1885,6 +1970,8 @@ app.post(
         sizeClassification,
 
         sizeAnalysis,
+
+        estimatedSize,
 
         supplierRating,
 
@@ -2055,6 +2142,11 @@ app.post(
         size_analysis:
           sizeAnalysis ||
           "",
+
+
+        estimated_size:
+          estimatedSize ||
+          "Unable to Estimate",
 
 
         /* SUPPLIER RATING */

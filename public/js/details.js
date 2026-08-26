@@ -210,6 +210,44 @@ function getStarRating(
 
 
 /* =========================================================
+   SAFE ESTIMATED SIZE
+========================================================= */
+
+function safeEstimatedSize(
+  value
+) {
+
+  if (
+    typeof value !== "string" ||
+    !value.trim()
+  ) {
+
+    return "Unable to Estimate";
+
+  }
+
+
+  const cleaned =
+    value.trim();
+
+
+  if (
+    /^\d+(?:\.\d+)?\s*%$/.test(
+      cleaned
+    )
+  ) {
+
+    return "Unable to Estimate";
+
+  }
+
+
+  return cleaned;
+
+}
+
+
+/* =========================================================
    LOAD INSPECTION DETAILS
 ========================================================= */
 
@@ -224,8 +262,10 @@ async function loadDetails() {
     `;
 
     if (removeInspectionBtn) {
+
       removeInspectionBtn.style.display =
         "none";
+
     }
 
     return;
@@ -277,15 +317,15 @@ async function loadDetails() {
       "/images/placeholder.jpg";
 
 
-    const sizeScore =
-      Number(
-        record.sizeScore
-      ) || 0;
-
-
     const sizeClassification =
       record.sizeClassification ||
       "Not Determined";
+
+
+    const estimatedSize =
+      safeEstimatedSize(
+        record.estimatedSize
+      );
 
 
     const supplierRating =
@@ -350,7 +390,7 @@ async function loadDetails() {
       <div class="card detail-card">
 
         <h3>
-          AI Analysis
+          QUALITY ASSESSMENT
         </h3>
 
 
@@ -371,7 +411,7 @@ async function loadDetails() {
           ${
             escapeHtml(
               record.analysis ||
-              "No analysis available."
+              "No quality assessment available."
             )
           }
         </p>
@@ -432,8 +472,8 @@ async function loadDetails() {
         <div>
           <span>Size</span>
 
-          <b>
-            ${sizeScore}%
+          <b class="detail-size-value">
+            ${escapeHtml(estimatedSize)}
           </b>
         </div>
 

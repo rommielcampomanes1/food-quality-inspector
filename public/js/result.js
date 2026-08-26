@@ -205,6 +205,49 @@ function safeNumber(
 
 
 /* =========================================================
+   SAFE ESTIMATED SIZE
+========================================================= */
+
+function safeEstimatedSize(
+  value
+) {
+
+  if (
+    typeof value !== "string" ||
+    !value.trim()
+  ) {
+
+    return "Unable to Estimate";
+
+  }
+
+
+  const cleaned =
+    value.trim();
+
+
+  /*
+    Prevent percentage from showing
+    in the Size field.
+  */
+
+  if (
+    /^\d+(?:\.\d+)?\s*%$/.test(
+      cleaned
+    )
+  ) {
+
+    return "Unable to Estimate";
+
+  }
+
+
+  return cleaned;
+
+}
+
+
+/* =========================================================
    AI ANALYSIS
 ========================================================= */
 
@@ -283,12 +326,12 @@ async function analyze() {
 
 
     /* =====================================================
-       MAIN AI ANALYSIS
+       QUALITY ASSESSMENT TEXT
     ====================================================== */
 
     $("analysisText").textContent =
       data.analysis ||
-      "No quality analysis available.";
+      "No quality assessment available.";
 
 
     /* =====================================================
@@ -334,14 +377,18 @@ async function analyze() {
 
 
     /* =====================================================
-       SIZE
+       SIZE — NOW DISPLAY CM / ESTIMATED SIZE
     ====================================================== */
 
     $("sizeScore").textContent =
-      `${safeNumber(
-        data.sizeScore
-      )}%`;
+      safeEstimatedSize(
+        data.estimatedSize
+      );
 
+
+    /* =====================================================
+       SIZE CLASSIFICATION
+    ====================================================== */
 
     $("sizeClassification").textContent =
       data.sizeClassification ||
@@ -349,11 +396,16 @@ async function analyze() {
 
 
     /*
-      sizeAnalysis is still returned by Gemini
-      and saved to Supabase.
+      sizeScore is still kept internally.
 
-      We no longer display it separately because
-      the main AI analysis already includes size.
+      Example:
+      sizeScore = 82
+
+      But the user now sees:
+      Approx. 18–22 cm
+
+      instead of:
+      82%
     */
 
 
@@ -787,7 +839,7 @@ $("saveBtn").onclick =
           aiResult.indicators,
 
 
-        /* SIZE */
+        /* SIZE SCORE — INTERNAL */
 
         sizeScore:
           safeNumber(
@@ -795,14 +847,26 @@ $("saveBtn").onclick =
           ),
 
 
+        /* SIZE CLASSIFICATION */
+
         sizeClassification:
           aiResult.sizeClassification ||
           "Not Determined",
 
 
+        /* SIZE ANALYSIS */
+
         sizeAnalysis:
           aiResult.sizeAnalysis ||
           "",
+
+
+        /* ESTIMATED CM SIZE */
+
+        estimatedSize:
+          safeEstimatedSize(
+            aiResult.estimatedSize
+          ),
 
 
         /* SUPPLIER RATING */

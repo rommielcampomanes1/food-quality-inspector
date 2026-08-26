@@ -67,6 +67,7 @@
   padding:10px 3px;
   text-align:center;
   min-width:0;
+  overflow:hidden;
 }
 
 .indicators span{
@@ -81,6 +82,17 @@
   color:#08763f;
   margin-top:5px;
   font-size:15px;
+  line-height:1.15;
+  word-break:break-word;
+}
+
+
+/* SIZE VALUE */
+
+#sizeScore{
+  font-size:12px;
+  line-height:1.2;
+  white-space:normal;
 }
 
 
@@ -108,12 +120,9 @@
   grid-template-columns:repeat(5,1fr);
   align-items:center;
   justify-items:center;
-
   width:100%;
   max-width:330px;
-
   margin:0 auto;
-
   padding:8px 6px;
   box-sizing:border-box;
 }
@@ -125,25 +134,17 @@
   display:flex;
   align-items:center;
   justify-content:center;
-
   width:52px;
   height:52px;
-
   padding:0;
   margin:0;
-
   border:0;
   outline:0;
-
   background:transparent;
-
   color:#cfd7d2;
-
   font-size:42px;
   line-height:1;
-
   cursor:pointer;
-
   transition:
     color .15s ease,
     transform .12s ease;
@@ -172,7 +173,7 @@
 
 
 /* =========================================================
-   AI ANALYSIS
+   QUALITY ASSESSMENT
 ========================================================= */
 
 .analysis{
@@ -194,14 +195,10 @@
   display:flex;
   justify-content:space-between;
   align-items:center;
-
   width:100%;
-
   gap:15px;
-
   padding-bottom:11px;
   margin-bottom:12px;
-
   border-bottom:1px solid #e1e8e3;
 }
 
@@ -218,7 +215,7 @@
 }
 
 
-/* AI TEXT */
+/* ASSESSMENT TEXT */
 
 .analysis p{
   margin:0;
@@ -281,14 +278,10 @@
 .spinner{
   width:58px;
   height:58px;
-
   border:5px solid #dbe9e0;
   border-top-color:#08763f;
-
   border-radius:50%;
-
   margin:0 auto 20px;
-
   animation:spin .8s linear infinite;
 }
 
@@ -359,6 +352,11 @@
     font-size:14px;
   }
 
+  #sizeScore{
+    font-size:10px;
+    line-height:1.15;
+  }
+
 
   /* STARS */
 
@@ -375,7 +373,7 @@
   }
 
 
-  /* AI ANALYSIS */
+  /* QUALITY ASSESSMENT */
 
   .analysis{
     padding:15px;
@@ -410,6 +408,10 @@
     width:43px;
     height:43px;
     font-size:35px;
+  }
+
+  #sizeScore{
+    font-size:9px;
   }
 
 }

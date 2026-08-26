@@ -148,7 +148,7 @@
 
 
 /* =========================================================
-   AI ANALYSIS
+   QUALITY ASSESSMENT
 ========================================================= */
 
 .detail-card{
@@ -194,7 +194,7 @@
 }
 
 
-/* AI ANALYSIS TEXT */
+/* QUALITY ASSESSMENT TEXT */
 
 .detail-card p{
   line-height:1.55;
@@ -235,6 +235,8 @@
   border:1px solid #dce8e0;
 
   min-width:0;
+
+  overflow:hidden;
 }
 
 .indicator-grid span{
@@ -246,9 +248,30 @@
 }
 
 .indicator-grid b{
+  display:block;
+
+  margin-top:4px;
+
   font-size:22px;
 
   color:#08763f;
+
+  line-height:1.15;
+}
+
+
+/* =========================================================
+   ESTIMATED SIZE
+========================================================= */
+
+.detail-size-value{
+  font-size:13px !important;
+
+  line-height:1.2 !important;
+
+  white-space:normal;
+
+  word-break:break-word;
 }
 
 
@@ -371,7 +394,16 @@
   }
 
 
-  /* AI ANALYSIS */
+  /* ESTIMATED SIZE */
+
+  .indicator-grid-five .detail-size-value{
+    font-size:10px !important;
+
+    line-height:1.15 !important;
+  }
+
+
+  /* QUALITY ASSESSMENT */
 
   .detail-card{
     padding:15px;
@@ -421,6 +453,10 @@
 
   .indicator-grid-five b{
     font-size:13px;
+  }
+
+  .indicator-grid-five .detail-size-value{
+    font-size:9px !important;
   }
 
 }
