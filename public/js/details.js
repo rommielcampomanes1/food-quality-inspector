@@ -458,7 +458,7 @@ async function loadDetails() {
 
 
         <div>
-          <span>Damage</span>
+          <span>Physical Condition</span>
 
           <b>
             ${

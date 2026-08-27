@@ -545,6 +545,570 @@ async function getFinalFpo(
 
 
 /* =========================================================
+   QC MEMORY CACHE
+========================================================= */
+
+let qcMemoryCache =
+  "";
+
+let qcMemoryCacheTime =
+  0;
+
+const QC_MEMORY_CACHE_MS =
+  5 * 60 * 1000;
+
+
+/* =========================================================
+   QC MEMORY
+
+   This does NOT retrain Gemini.
+
+   It builds a small internal reference from previous
+   inspections saved in Supabase.
+
+   The CURRENT IMAGE always remains the main evidence.
+========================================================= */
+
+async function buildQcMemory() {
+
+  try {
+
+    const now =
+      Date.now();
+
+
+    if (
+      qcMemoryCache &&
+      now - qcMemoryCacheTime <
+        QC_MEMORY_CACHE_MS
+    ) {
+
+      return qcMemoryCache;
+
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await supabase
+        .from(
+          "inspections"
+        )
+        .select(`
+          product_name,
+          quality_result,
+          quality_score,
+          size_classification,
+          estimated_size,
+          supplier_rating,
+          reason_rejection,
+          created_at
+        `)
+        .order(
+          "created_at",
+          {
+            ascending:
+              false
+          }
+        )
+        .limit(
+          300
+        );
+
+
+    if (error) {
+
+      console.error(
+        "QC Memory load error:",
+        error.message
+      );
+
+      return "";
+
+    }
+
+
+    if (
+      !Array.isArray(data) ||
+      data.length === 0
+    ) {
+
+      return "";
+
+    }
+
+
+    const products =
+      new Map();
+
+
+    for (
+      const row
+      of data
+    ) {
+
+      const normalizedProduct =
+        String(
+          row.product_name || ""
+        )
+          .trim()
+          .toLowerCase();
+
+
+      if (
+        !normalizedProduct
+      ) {
+
+        continue;
+
+      }
+
+
+      if (
+        !products.has(
+          normalizedProduct
+        )
+      ) {
+
+        products.set(
+          normalizedProduct,
+          {
+
+            name:
+              row.product_name,
+
+            count:
+              0,
+
+            accepted:
+              0,
+
+            rejected:
+              0,
+
+            scoreTotal:
+              0,
+
+            scoreCount:
+              0,
+
+            ratingTotal:
+              0,
+
+            ratingCount:
+              0,
+
+            classifications:
+              {},
+
+            rejectionReasons:
+              {},
+
+            estimatedSizes:
+              []
+
+          }
+        );
+
+      }
+
+
+      const item =
+        products.get(
+          normalizedProduct
+        );
+
+
+      item.count++;
+
+
+      /* =====================================================
+         ACCEPT / REJECT HISTORY
+      ====================================================== */
+
+      if (
+        row.quality_result ===
+        "Bad Quality"
+      ) {
+
+        item.rejected++;
+
+      }
+
+      else {
+
+        item.accepted++;
+
+      }
+
+
+      /* =====================================================
+         QUALITY SCORE HISTORY
+      ====================================================== */
+
+      const score =
+        Number(
+          row.quality_score
+        );
+
+
+      if (
+        Number.isFinite(
+          score
+        )
+      ) {
+
+        item.scoreTotal +=
+          score;
+
+        item.scoreCount++;
+
+      }
+
+
+      /* =====================================================
+         HUMAN SUPPLIER RATING
+      ====================================================== */
+
+      const rating =
+        Number(
+          row.supplier_rating
+        );
+
+
+      if (
+        Number.isFinite(
+          rating
+        ) &&
+        rating >= 1 &&
+        rating <= 5
+      ) {
+
+        item.ratingTotal +=
+          rating;
+
+        item.ratingCount++;
+
+      }
+
+
+      /* =====================================================
+         SIZE CLASSIFICATION HISTORY
+      ====================================================== */
+
+      const classification =
+        String(
+          row.size_classification ||
+          ""
+        ).trim();
+
+
+      if (
+        classification
+      ) {
+
+        item.classifications[
+          classification
+        ] =
+          (
+            item.classifications[
+              classification
+            ] || 0
+          ) + 1;
+
+      }
+
+
+      /* =====================================================
+         ESTIMATED SIZE HISTORY
+      ====================================================== */
+
+      const estimatedSize =
+        String(
+          row.estimated_size ||
+          ""
+        ).trim();
+
+
+      if (
+        estimatedSize &&
+        estimatedSize !==
+          "Unable to Estimate"
+      ) {
+
+        if (
+          !item.estimatedSizes
+            .includes(
+              estimatedSize
+            )
+        ) {
+
+          item.estimatedSizes
+            .push(
+              estimatedSize
+            );
+
+        }
+
+      }
+
+
+      /* =====================================================
+         REJECTION REASON HISTORY
+      ====================================================== */
+
+      const reason =
+        String(
+          row.reason_rejection ||
+          ""
+        ).trim();
+
+
+      if (
+        reason
+      ) {
+
+        item.rejectionReasons[
+          reason
+        ] =
+          (
+            item.rejectionReasons[
+              reason
+            ] || 0
+          ) + 1;
+
+      }
+
+    }
+
+
+    const profiles =
+      [];
+
+
+    for (
+      const item
+      of products.values()
+    ) {
+
+      /*
+        At least 3 previous inspections are required
+        before a product profile is used.
+      */
+
+      if (
+        item.count < 3
+      ) {
+
+        continue;
+
+      }
+
+
+      const acceptanceRate =
+        Math.round(
+          (
+            item.accepted /
+            item.count
+          ) * 100
+        );
+
+
+      const averageScore =
+        item.scoreCount > 0
+
+          ? Math.round(
+              item.scoreTotal /
+              item.scoreCount
+            )
+
+          : null;
+
+
+      const averageRating =
+        item.ratingCount > 0
+
+          ? (
+              item.ratingTotal /
+              item.ratingCount
+            ).toFixed(
+              1
+            )
+
+          : null;
+
+
+      const commonClassification =
+        Object.entries(
+          item.classifications
+        )
+          .sort(
+            (a, b) =>
+              b[1] - a[1]
+          )[0]?.[0] ||
+        "";
+
+
+      const commonReason =
+        Object.entries(
+          item.rejectionReasons
+        )
+          .sort(
+            (a, b) =>
+              b[1] - a[1]
+          )[0]?.[0] ||
+        "";
+
+
+      profiles.push({
+
+        name:
+          item.name,
+
+        count:
+          item.count,
+
+        acceptanceRate,
+
+        averageScore,
+
+        averageRating,
+
+        commonClassification,
+
+        commonReason,
+
+        estimatedSizes:
+          item.estimatedSizes
+            .slice(
+              0,
+              3
+            )
+
+      });
+
+    }
+
+
+    profiles.sort(
+      (a, b) =>
+        b.count - a.count
+    );
+
+
+    const memoryLines =
+      profiles
+        .slice(
+          0,
+          20
+        )
+        .map(
+          (profile) => {
+
+            let line =
+              `Product: ${profile.name}` +
+              ` | Previous inspections: ${profile.count}` +
+              ` | Acceptance rate: ${profile.acceptanceRate}%`;
+
+
+            if (
+              profile.averageScore !==
+              null
+            ) {
+
+              line +=
+                ` | Average previous quality score: ${profile.averageScore}%`;
+
+            }
+
+
+            if (
+              profile.averageRating !==
+              null
+            ) {
+
+              line +=
+                ` | Average human supplier rating: ${profile.averageRating}/5`;
+
+            }
+
+
+            if (
+              profile
+                .commonClassification
+            ) {
+
+              line +=
+                ` | Common size classification: ${profile.commonClassification}`;
+
+            }
+
+
+            if (
+              profile.commonReason
+            ) {
+
+              line +=
+                ` | Common rejection reason: ${profile.commonReason}`;
+
+            }
+
+
+            if (
+              profile
+                .estimatedSizes
+                .length > 0
+            ) {
+
+              line +=
+                ` | Previous estimated sizes: ` +
+                profile
+                  .estimatedSizes
+                  .join(
+                    ", "
+                  );
+
+            }
+
+
+            return line;
+
+          }
+        );
+
+
+    qcMemoryCache =
+      memoryLines.join(
+        "\n"
+      );
+
+
+    qcMemoryCacheTime =
+      now;
+
+
+    return qcMemoryCache;
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "QC Memory error:",
+      error
+    );
+
+
+    return "";
+
+  }
+
+}
+
+
+/* =========================================================
    GEMINI IMAGE ANALYSIS
 ========================================================= */
 
@@ -645,6 +1209,14 @@ app.post(
 
 
       /* =====================================================
+         LOAD QC MEMORY
+      ====================================================== */
+
+      const qcMemory =
+        await buildQcMemory();
+
+
+      /* =====================================================
          GEMINI PROMPT
       ====================================================== */
 
@@ -653,7 +1225,58 @@ You are a professional food quality inspection assistant.
 
 Analyze the uploaded food product image carefully and objectively.
 
-Your assessment must be based ONLY on what is clearly visible in the image.
+Your assessment must be based primarily on what is clearly visible in the CURRENT IMAGE.
+
+
+=========================================================
+QC MEMORY — SECONDARY REFERENCE ONLY
+=========================================================
+
+You may receive historical QC reference information from
+previous inspections.
+
+Historical QC information is NOT proof of the condition
+of the current product.
+
+The CURRENT IMAGE is always the primary evidence.
+
+Never change a clearly visible current defect just because
+previous inspections were good.
+
+Never assume the current product is bad just because
+previous inspections were bad.
+
+Use historical information only to improve consistency
+and product-specific context when it is relevant.
+
+Only use a historical profile if it clearly refers to
+the SAME TYPE OF PRODUCT visible in the current image.
+
+Ignore historical information for unrelated products.
+
+Human-entered information such as supplier ratings and
+accept/reject outcomes may be treated as useful supporting
+signals, but they must NEVER override what is visibly
+present in the current image.
+
+Do not mention QC Memory, historical inspections,
+previous inspections, database records, averages,
+acceptance rates, supplier history, or learning data
+in the user-facing QUALITY ASSESSMENT.
+
+The final user-facing assessment must sound like a normal
+inspection of the CURRENT IMAGE only.
+
+
+=========================================================
+AVAILABLE INTERNAL QC MEMORY
+=========================================================
+
+${
+  qcMemory
+    ? qcMemory
+    : "No sufficient previous QC memory is currently available."
+}
 
 
 =========================================================
@@ -1147,68 +1770,10 @@ Do NOT force a centimeter estimate when confidence is low.
 
 Do NOT return percentages for estimatedSize.
 
-Do NOT return values such as:
-
-"80%"
-"90%"
-"75%"
-
 estimatedSize must contain an approximate centimeter
 measurement or:
 
 "Unable to Estimate"
-
-
-=========================================================
-SIZE CATEGORY + UNIFORMITY EXAMPLES
-=========================================================
-
-Example:
-
-Several cucumbers appear medium in apparent size and
-are very similar to each other.
-
-sizeCategory:
-"Medium"
-
-sizeUniformity:
-"Uniform"
-
-
-Example:
-
-Several tomatoes appear generally large but show
-minor variation.
-
-sizeCategory:
-"Large"
-
-sizeUniformity:
-"Mostly Uniform"
-
-
-Example:
-
-Visible cucumbers include clearly small, medium,
-and large pieces.
-
-sizeCategory:
-"Mixed"
-
-sizeUniformity:
-"Mixed Size"
-
-
-Example:
-
-One apple is visible and it appears medium in
-apparent size.
-
-sizeCategory:
-"Medium"
-
-sizeUniformity:
-"Single Product"
 
 
 =========================================================
@@ -1219,27 +1784,10 @@ Return:
 
 sizeAnalysis
 
-This is stored separately for QC records.
-
 Keep it brief and factual.
 
 Mention apparent category, uniformity, and estimated
 physical size when possible.
-
-Examples:
-
-"The visible cucumbers appear generally medium in size,
-mostly uniform, and approximately 18–22 cm in visible length."
-
-"The visible tomatoes include smaller and larger pieces,
-with an estimated visible diameter range of approximately
-5–8 cm."
-
-"The single visible apple appears medium in apparent size,
-with an estimated visible diameter of approximately 7–9 cm."
-
-"The physical size cannot be reliably estimated because
-the image does not provide sufficient scale or perspective."
 
 
 =========================================================
@@ -1270,37 +1818,21 @@ When relevant, discuss:
 SIZE SHOULD BE DISCUSSED NATURALLY INSIDE THE SAME
 QUALITY ASSESSMENT when a reasonable estimate is available.
 
-Example:
-
-"The visible cucumbers appear fresh with healthy green
-coloration and generally clean surfaces. They appear
-medium in size and mostly uniform, with an estimated
-visible length of approximately 18–22 cm. No major visible
-damage or deterioration is apparent."
-
 If estimatedSize is "Unable to Estimate", do not invent
-a centimeter measurement in the quality assessment.
+a centimeter measurement.
 
-Instead, naturally state that physical size cannot be
-reliably estimated from the image if that information
-is important to the assessment.
+Do not mention historical QC data.
 
-Do not repeatedly use the word "batch".
+Do not mention previous inspections.
 
-Do not exaggerate certainty.
+Do not mention QC Memory.
 
-Use natural phrases such as:
+Do not mention supplier averages.
 
-"appears"
-"visible"
-"estimated"
-"approximately"
-"apparent size"
-"no obvious signs"
-"based on the visible condition"
-"cannot be confidently determined from this image"
+Do not mention acceptance rates.
 
-when appropriate.
+The output must read as a direct assessment of the
+CURRENT IMAGE.
 
 
 =========================================================
@@ -1365,10 +1897,6 @@ serious or widespread to justify rejection.
 
 Do not reject a product only because of minor natural
 imperfections.
-
-Size variation alone should NOT automatically cause
-rejection unless the visible size inconsistency represents
-a meaningful QC concern.
 
 
 =========================================================
@@ -1437,23 +1965,19 @@ FINAL RULES
 =========================================================
 
 - Analyze every uploaded image independently.
+- The CURRENT IMAGE is the main evidence.
+- QC Memory is secondary reference only.
+- Never let historical data override a clearly visible current condition.
+- Never expose QC Memory in the user-facing assessment.
 - Analyze all clearly visible pieces of the main product.
-- Never intentionally focus on only one product when several are clearly visible.
 - Never assume hidden conditions.
 - Never invent defects.
 - Never claim smell, taste, internal condition, temperature, or firmness from an image.
 - Describe uncertainty when evidence is insufficient.
-- Use natural wording based on what is actually visible.
 - Do not automatically call multiple products a "batch".
-- Include apparent size category naturally in the quality assessment.
-- Include visible size uniformity naturally in the quality assessment.
 - Include estimated centimeter size only when reasonably possible.
 - estimatedSize must NEVER be a percentage.
 - Prefer an estimated range instead of false precision.
-- Small / Medium / Large must be product-relative visual estimates.
-- Use "Mixed" when meaningful different apparent size categories are visible together.
-- Use "Unable to Determine" when apparent size category cannot be reasonably assessed.
-- Use "Unable to Estimate" when a reasonable centimeter estimate cannot be made.
 - score must be 0-100.
 - freshness must be 0-100.
 - color must be 0-100.
@@ -1464,9 +1988,7 @@ FINAL RULES
 - grade must be exactly "Good" or "Bad".
 - suggestedDecision must be exactly "ACCEPTED" or "REJECTED".
 - suggestedReason must be empty when ACCEPTED.
-- Base conclusions only on visible evidence.
 `;
-
 
       /* =====================================================
          GEMINI REQUEST
@@ -1621,6 +2143,8 @@ FINAL RULES
           });
 
       }
+
+
       /* =====================================================
          READ GEMINI RESULT
       ====================================================== */
@@ -1799,10 +2323,6 @@ FINAL RULES
         `${result.sizeCategory} — ${result.sizeUniformity}`;
 
 
-      /* =====================================================
-         ESTIMATED SIZE IN CM
-      ====================================================== */
-
       result.estimatedSize =
         typeof result.estimatedSize ===
           "string" &&
@@ -1810,11 +2330,6 @@ FINAL RULES
           ? result.estimatedSize.trim()
           : "Unable to Estimate";
 
-
-      /*
-        Protect the UI from Gemini accidentally returning
-        a percentage for estimatedSize.
-      */
 
       if (
         /^\s*\d+(?:\.\d+)?\s*%\s*$/.test(
@@ -1987,10 +2502,6 @@ app.post(
         Date.now();
 
 
-      /* =====================================================
-         VALIDATE SUPPLIER RATING
-      ====================================================== */
-
       const ratingNumber =
         Number(
           supplierRating
@@ -2023,19 +2534,11 @@ app.post(
         );
 
 
-      /* =====================================================
-         FPO
-      ====================================================== */
-
       const finalLpo =
         await getFinalFpo(
           lpo
         );
 
-
-      /* =====================================================
-         IMAGE
-      ====================================================== */
 
       const {
         publicUrl,
@@ -2050,10 +2553,6 @@ app.post(
       uploadedPath =
         storagePath;
 
-
-      /* =====================================================
-         DECISION
-      ====================================================== */
 
       const finalDecision =
         decision ===
@@ -2073,10 +2572,6 @@ app.post(
                 : "Good Quality"
             );
 
-
-      /* =====================================================
-         DATABASE RECORD
-      ====================================================== */
 
       const databaseRecord = {
 
@@ -2126,8 +2621,6 @@ app.post(
           indicators || {},
 
 
-        /* SIZE */
-
         size_score:
           clampScore(
             sizeScore
@@ -2148,8 +2641,6 @@ app.post(
           estimatedSize ||
           "Unable to Estimate",
 
-
-        /* SUPPLIER RATING */
 
         supplier_rating:
           finalSupplierRating,
@@ -2206,6 +2697,18 @@ app.post(
         );
 
       }
+
+
+      /*
+        Reset QC Memory cache after a new inspection
+        so future analysis can learn from the new record.
+      */
+
+      qcMemoryCache =
+        "";
+
+      qcMemoryCacheTime =
+        0;
 
 
       res.json({
@@ -2528,6 +3031,11 @@ app.listen(
 
     console.log(
       "Supabase database connected."
+    );
+
+
+    console.log(
+      "QC Memory enabled."
     );
 
   }
