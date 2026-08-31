@@ -226,11 +226,6 @@ function safeEstimatedSize(
     value.trim();
 
 
-  /*
-    Prevent percentage from showing
-    in the Size field.
-  */
-
   if (
     /^\d+(?:\.\d+)?\s*%$/.test(
       cleaned
@@ -377,7 +372,7 @@ async function analyze() {
 
 
     /* =====================================================
-       SIZE — NOW DISPLAY CM / ESTIMATED SIZE
+       SIZE — DISPLAY CM / ESTIMATED SIZE
     ====================================================== */
 
     $("sizeScore").textContent =
@@ -393,20 +388,6 @@ async function analyze() {
     $("sizeClassification").textContent =
       data.sizeClassification ||
       "Not Determined";
-
-
-    /*
-      sizeScore is still kept internally.
-
-      Example:
-      sizeScore = 82
-
-      But the user now sees:
-      Approx. 18–22 cm
-
-      instead of:
-      82%
-    */
 
 
     /* =====================================================
@@ -667,6 +648,16 @@ $("saveBtn").onclick =
       $("receiving").value;
 
 
+    const quantity =
+      Number(
+        $("quantity").value
+      );
+
+
+    const uom =
+      $("uom").value;
+
+
     const received =
       $("received").value;
 
@@ -701,6 +692,33 @@ $("saveBtn").onclick =
 
       alert(
         "Please select the receiving type."
+      );
+
+      return;
+
+    }
+
+
+    if (
+      !Number.isFinite(
+        quantity
+      ) ||
+      quantity <= 0
+    ) {
+
+      alert(
+        "Please enter a valid quantity greater than 0."
+      );
+
+      return;
+
+    }
+
+
+    if (!uom) {
+
+      alert(
+        "Please select the UOM."
       );
 
       return;
@@ -807,6 +825,14 @@ $("saveBtn").onclick =
 
 
         receiving,
+
+
+        /* QUANTITY / UOM */
+
+        quantity,
+
+
+        uom,
 
 
         received,

@@ -325,6 +325,19 @@ function mapInspectionRow(
       row.receiving_type || "",
 
 
+    /* QUANTITY / UOM */
+
+    quantity:
+      row.quantity === null ||
+      row.quantity === undefined
+        ? null
+        : Number(row.quantity),
+
+
+    uom:
+      row.uom || "",
+
+
     received:
       row.received_date || "",
 
@@ -560,13 +573,6 @@ const QC_MEMORY_CACHE_MS =
 
 /* =========================================================
    QC MEMORY
-
-   This does NOT retrain Gemini.
-
-   It builds a small internal reference from previous
-   inspections saved in Supabase.
-
-   The CURRENT IMAGE always remains the main evidence.
 ========================================================= */
 
 async function buildQcMemory() {
@@ -724,10 +730,6 @@ async function buildQcMemory() {
       item.count++;
 
 
-      /* =====================================================
-         ACCEPT / REJECT HISTORY
-      ====================================================== */
-
       if (
         row.quality_result ===
         "Bad Quality"
@@ -743,10 +745,6 @@ async function buildQcMemory() {
 
       }
 
-
-      /* =====================================================
-         QUALITY SCORE HISTORY
-      ====================================================== */
 
       const score =
         Number(
@@ -767,10 +765,6 @@ async function buildQcMemory() {
 
       }
 
-
-      /* =====================================================
-         HUMAN SUPPLIER RATING
-      ====================================================== */
 
       const rating =
         Number(
@@ -794,10 +788,6 @@ async function buildQcMemory() {
       }
 
 
-      /* =====================================================
-         SIZE CLASSIFICATION HISTORY
-      ====================================================== */
-
       const classification =
         String(
           row.size_classification ||
@@ -820,10 +810,6 @@ async function buildQcMemory() {
 
       }
 
-
-      /* =====================================================
-         ESTIMATED SIZE HISTORY
-      ====================================================== */
 
       const estimatedSize =
         String(
@@ -854,10 +840,6 @@ async function buildQcMemory() {
 
       }
 
-
-      /* =====================================================
-         REJECTION REASON HISTORY
-      ====================================================== */
 
       const reason =
         String(
@@ -892,11 +874,6 @@ async function buildQcMemory() {
       const item
       of products.values()
     ) {
-
-      /*
-        At least 3 previous inspections are required
-        before a product profile is used.
-      */
 
       if (
         item.count < 3
@@ -1036,8 +1013,7 @@ async function buildQcMemory() {
 
 
             if (
-              profile
-                .commonClassification
+              profile.commonClassification
             ) {
 
               line +=
@@ -1057,18 +1033,12 @@ async function buildQcMemory() {
 
 
             if (
-              profile
-                .estimatedSizes
-                .length > 0
+              profile.estimatedSizes.length > 0
             ) {
 
               line +=
                 ` | Previous estimated sizes: ` +
-                profile
-                  .estimatedSizes
-                  .join(
-                    ", "
-                  );
+                profile.estimatedSizes.join(", ");
 
             }
 
@@ -1208,17 +1178,9 @@ app.post(
       }
 
 
-      /* =====================================================
-         LOAD QC MEMORY
-      ====================================================== */
-
       const qcMemory =
         await buildQcMemory();
 
-
-      /* =====================================================
-         GEMINI PROMPT
-      ====================================================== */
 
       const prompt = `
 You are a professional food quality inspection assistant.
@@ -1254,18 +1216,10 @@ the SAME TYPE OF PRODUCT visible in the current image.
 
 Ignore historical information for unrelated products.
 
-Human-entered information such as supplier ratings and
-accept/reject outcomes may be treated as useful supporting
-signals, but they must NEVER override what is visibly
-present in the current image.
-
 Do not mention QC Memory, historical inspections,
 previous inspections, database records, averages,
 acceptance rates, supplier history, or learning data
 in the user-facing QUALITY ASSESSMENT.
-
-The final user-facing assessment must sound like a normal
-inspection of the CURRENT IMAGE only.
 
 
 =========================================================
@@ -1289,40 +1243,12 @@ Do NOT automatically call multiple products a "batch".
 
 Use natural wording based on the image.
 
-Examples:
-
-If one tomato is visible:
-"The visible tomato appears..."
-
-If three cucumbers are visible:
-"The three visible cucumbers appear..."
-
-If several strawberries are visible:
-"The visible strawberries appear..."
-
-If many products are visible:
-"The visible products appear..."
-
-You may use the word "batch" only when it is naturally appropriate.
-
-Do not repeatedly use the word "batch".
-
 
 =========================================================
 ANALYZE EVERYTHING CLEARLY VISIBLE
 =========================================================
 
 Inspect all clearly visible pieces of the main food product.
-
-Do NOT focus only on:
-
-- the closest item
-- the largest item
-- the smallest item
-- the clearest item
-- the best-looking item
-- the worst-looking item
-- the item in the center
 
 If multiple pieces of the same product are clearly visible,
 consider all of them.
@@ -1355,24 +1281,8 @@ Do NOT invent:
 
 unless there is visible evidence supporting the conclusion.
 
-If something cannot be confidently determined from the image,
-say so naturally.
-
-If part of a product is:
-
-- hidden
-- overlapping
-- blurry
-- dark
-- obscured
-- outside the frame
-
-do not assume its condition.
-
-Never claim that hidden surfaces were inspected.
-
-If image quality limits the inspection,
-mention the limitation.
+Never claim smell, taste, internal condition,
+temperature, firmness, or exact shelf life from an image.
 
 
 =========================================================
@@ -1381,49 +1291,6 @@ PRODUCT IDENTIFICATION
 
 Identify the main visible food product as specifically
 as reasonably possible.
-
-Examples:
-
-Tomato
-Cucumber
-Strawberry
-Apple
-Orange
-Lettuce
-Eggplant
-Bell Pepper
-Fish
-Chicken
-Beef
-
-Do not invent a specific variety if the variety
-cannot be confidently identified visually.
-
-
-=========================================================
-QUALITY INSPECTION
-=========================================================
-
-Evaluate visible characteristics including:
-
-- freshness
-- color
-- surface condition
-- physical damage
-- bruising
-- cuts
-- cracks
-- mold
-- rot
-- dehydration
-- shriveling
-- discoloration
-- pest damage
-- deterioration
-- abnormal visible defects
-
-Only discuss characteristics that can reasonably
-be assessed from the image.
 
 
 =========================================================
@@ -1438,19 +1305,6 @@ excellent apparent visible freshness.
 0 =
 severe visible deterioration.
 
-Freshness must be based only on visible evidence.
-
-Do NOT claim:
-
-- internal freshness
-- taste
-- smell
-- firmness
-- temperature
-- exact shelf life
-
-from the image.
-
 
 =========================================================
 COLOR
@@ -1463,18 +1317,6 @@ healthy and appropriate visible coloration.
 
 0 =
 severe abnormal discoloration.
-
-Consider:
-
-- natural coloration
-- uneven coloration
-- abnormal darkening
-- yellowing
-- browning
-- unusual spots
-- ripening differences
-
-Do not penalize normal natural color variation.
 
 
 =========================================================
@@ -1489,36 +1331,26 @@ clean and healthy visible surfaces with no meaningful defects.
 0 =
 severe visible surface deterioration.
 
-Consider visible:
-
-- wrinkles
-- cracks
-- cuts
-- scars
-- blemishes
-- mold
-- decay
-- skin damage
-- contamination
-
-Only evaluate surfaces that are actually visible.
-
 
 =========================================================
-DAMAGE
+PHYSICAL CONDITION
 =========================================================
+
+The JSON field remains named:
+
+damage
 
 damage must be scored from 0 to 100.
 
 IMPORTANT:
 
-A HIGH damage score means GOOD CONDITION.
+A HIGH damage score means GOOD PHYSICAL CONDITION.
 
 100 =
-no meaningful visible damage.
+no meaningful visible physical damage.
 
 0 =
-severe visible damage.
+severe visible physical damage.
 
 Consider:
 
@@ -1531,45 +1363,21 @@ Consider:
 - severe scars
 - physical deterioration
 
-Minor natural imperfections should not automatically
-cause rejection.
-
 
 =========================================================
 SIZE INSPECTION
 =========================================================
 
-You must evaluate THREE different aspects of visible size:
+You must evaluate:
 
 1. SIZE CATEGORY
 2. SIZE UNIFORMITY
 3. ESTIMATED PHYSICAL SIZE
 
-These are different.
-
-SIZE CATEGORY describes whether the visible product
-appears generally:
-
-- Small
-- Medium
-- Large
-- Mixed
-- Unable to Determine
-
-SIZE UNIFORMITY describes how similar the visible
-pieces are to each other.
-
-ESTIMATED PHYSICAL SIZE provides an approximate visible
-measurement in centimeters when reasonably possible.
-
 
 =========================================================
 SIZE CATEGORY
 =========================================================
-
-Return a field called:
-
-sizeCategory
 
 sizeCategory must be EXACTLY one of:
 
@@ -1580,70 +1388,9 @@ sizeCategory must be EXACTLY one of:
 "Unable to Determine"
 
 
-Use "Small" when the clearly visible products generally
-appear small for that type of product.
-
-Use "Medium" when the clearly visible products generally
-appear medium or typical in apparent size for that type
-of product.
-
-Use "Large" when the clearly visible products generally
-appear large for that type of product.
-
-Use "Mixed" when clearly visible pieces include meaningfully
-different apparent size categories.
-
-Use "Unable to Determine" when the image does not provide
-enough visual information.
-
-
-=========================================================
-SIZE CATEGORY RULES
-=========================================================
-
-Size category is a VISUAL ESTIMATE.
-
-Consider the normal visual proportions of the identified
-product when making Small / Medium / Large judgments.
-
-Assess cucumber relative to cucumbers, tomato relative
-to tomatoes, apple relative to apples, and so on.
-
-Do NOT use the same physical-size expectation for
-different types of food.
-
-The classification must be PRODUCT-RELATIVE.
-
-
-=========================================================
-CAMERA PERSPECTIVE
-=========================================================
-
-Camera perspective can make a product appear larger
-or smaller.
-
-An item close to the camera may appear larger.
-
-An item farther from the camera may appear smaller.
-
-Take perspective into account.
-
-Do NOT classify an item as Large only because it is
-closer to the camera.
-
-If perspective, cropping, distance, or image angle makes
-the category unreliable, use:
-
-"Unable to Determine"
-
-
 =========================================================
 SIZE UNIFORMITY
 =========================================================
-
-Return a field called:
-
-sizeUniformity
 
 sizeUniformity must be EXACTLY one of:
 
@@ -1653,127 +1400,31 @@ sizeUniformity must be EXACTLY one of:
 "Highly Mixed Size"
 "Single Product"
 
-
-Also return:
-
-sizeScore
-
 sizeScore must be between 0 and 100.
-
-
-When MULTIPLE pieces of the same product are clearly visible:
-
-90-100 =
-Uniform visible sizes.
-
-75-89 =
-Mostly uniform with minor size variation.
-
-50-74 =
-Noticeably mixed sizes.
-
-0-49 =
-Highly mixed sizes with major visible variation.
-
-
-If only ONE product is clearly visible:
-
-sizeUniformity must be:
-
-"Single Product"
-
-
-For one product, do not pretend to compare uniformity
-between multiple pieces.
 
 
 =========================================================
 ESTIMATED PHYSICAL SIZE
 =========================================================
 
-Return a field called:
+Return:
 
 estimatedSize
 
-estimatedSize is the approximate visible physical size
-of the main product in centimeters.
-
 Prefer a RANGE instead of one exact number.
 
-Good examples:
+Examples:
 
 "Approx. 18–22 cm"
 "Approx. 6–8 cm diameter"
 "Approx. 10–14 cm"
 "Unable to Estimate"
 
+This is only a visual estimate.
 
-For elongated products such as:
+Never claim the size is exact.
 
-- cucumber
-- carrot
-- zucchini
-- eggplant
-- banana
-- fish
-
-estimate the visible LENGTH when reasonably possible.
-
-
-For generally round products such as:
-
-- tomato
-- apple
-- orange
-- onion
-- lemon
-
-estimate the visible DIAMETER when reasonably possible.
-
-
-For leafy or irregular products, use the most meaningful
-visible dimension only when a reasonable estimate can be made.
-
-
-If multiple pieces are visible, return a representative
-visible range covering the clearly visible products.
-
-Example:
-
-If several cucumbers appear to range approximately
-from 16 cm to 22 cm in visible length, return:
-
-"Approx. 16–22 cm"
-
-
-If tomatoes appear approximately 5 cm to 7 cm across, return:
-
-"Approx. 5–7 cm diameter"
-
-
-IMPORTANT:
-
-This is a visual estimate, NOT an exact measurement.
-
-Never present the estimate as laboratory-measured,
-ruler-measured, or exact.
-
-Camera distance, lens perspective, cropping and viewing
-angle can affect apparent size.
-
-If the image does not provide enough visual context for
-a reasonable approximate centimeter estimate, return exactly:
-
-"Unable to Estimate"
-
-Do NOT force a centimeter estimate when confidence is low.
-
-Do NOT return percentages for estimatedSize.
-
-estimatedSize must contain an approximate centimeter
-measurement or:
-
-"Unable to Estimate"
+Do NOT return a percentage for estimatedSize.
 
 
 =========================================================
@@ -1786,9 +1437,6 @@ sizeAnalysis
 
 Keep it brief and factual.
 
-Mention apparent category, uniformity, and estimated
-physical size when possible.
-
 
 =========================================================
 QUALITY ASSESSMENT
@@ -1799,40 +1447,24 @@ shown to the QC user.
 
 It must be ONE complete natural paragraph.
 
-Combine the important visible findings into this paragraph.
-
 When relevant, discuss:
 
-- what product is visible
-- approximate visible quantity when reasonably countable
+- product
+- visible quantity
 - freshness
 - coloration
-- surface condition
-- visible damage or defects
-- apparent size category
+- surface
+- physical condition
+- apparent size
 - size consistency
-- estimated physical size
-- differences between visible pieces
-- overall visible quality
+- estimated size
+- visible defects
+- overall quality
 
-SIZE SHOULD BE DISCUSSED NATURALLY INSIDE THE SAME
-QUALITY ASSESSMENT when a reasonable estimate is available.
+Do not mention historical QC data or QC Memory.
 
-If estimatedSize is "Unable to Estimate", do not invent
-a centimeter measurement.
-
-Do not mention historical QC data.
-
-Do not mention previous inspections.
-
-Do not mention QC Memory.
-
-Do not mention supplier averages.
-
-Do not mention acceptance rates.
-
-The output must read as a direct assessment of the
-CURRENT IMAGE.
+The output must sound like a direct assessment of
+the CURRENT IMAGE.
 
 
 =========================================================
@@ -1841,22 +1473,7 @@ OVERALL SCORE
 
 score must be between 0 and 100.
 
-The overall score should reflect the complete visible
-quality assessment.
-
-Do not automatically give 90-100 simply because the
-product is recognizable.
-
 Use the full score range when justified.
-
-Healthy appearance, appropriate coloration, good apparent
-freshness, clean surfaces, and little visible damage
-should generally increase the score.
-
-Repeated or severe visible defects should reduce the score.
-
-Size variation alone should not automatically make the
-overall food quality poor.
 
 
 =========================================================
@@ -1871,7 +1488,6 @@ or
 
 "Bad Quality"
 
-
 grade must be exactly:
 
 "Good"
@@ -1879,7 +1495,6 @@ grade must be exactly:
 or
 
 "Bad"
-
 
 suggestedDecision must be exactly:
 
@@ -1890,29 +1505,17 @@ or
 "REJECTED"
 
 
-Use ACCEPTED when the visible condition appears acceptable.
-
-Use REJECTED when clearly visible defects are sufficiently
-serious or widespread to justify rejection.
-
-Do not reject a product only because of minor natural
-imperfections.
-
-
 =========================================================
 REJECTION REASON
 =========================================================
 
-If suggestedDecision is "ACCEPTED":
+If ACCEPTED:
 
 suggestedReason must be an empty string.
 
+If REJECTED:
 
-If suggestedDecision is "REJECTED":
-
-suggestedReason should identify the main visible reason.
-
-Prefer one of these when applicable:
+Prefer one of:
 
 "Damaged"
 "Rotten"
@@ -1932,18 +1535,12 @@ RETURN FORMAT
 
 Return ONLY valid JSON.
 
-Do not return markdown.
-
-Do not return explanations outside the JSON.
-
-Use exactly this structure:
-
 {
   "product": "specific visible product name",
   "score": 0,
   "quality": "Good Quality",
   "grade": "Good",
-  "analysis": "one complete natural quality assessment of everything relevant and clearly visible in the image",
+  "analysis": "one complete natural quality assessment",
   "indicators": {
     "freshness": 0,
     "color": 0,
@@ -1954,46 +1551,11 @@ Use exactly this structure:
   "sizeCategory": "Medium",
   "sizeUniformity": "Mostly Uniform",
   "estimatedSize": "Approx. 18–22 cm",
-  "sizeAnalysis": "brief internal QC description of visible size category, uniformity and estimated size",
+  "sizeAnalysis": "brief size assessment",
   "suggestedDecision": "ACCEPTED",
   "suggestedReason": ""
 }
-
-
-=========================================================
-FINAL RULES
-=========================================================
-
-- Analyze every uploaded image independently.
-- The CURRENT IMAGE is the main evidence.
-- QC Memory is secondary reference only.
-- Never let historical data override a clearly visible current condition.
-- Never expose QC Memory in the user-facing assessment.
-- Analyze all clearly visible pieces of the main product.
-- Never assume hidden conditions.
-- Never invent defects.
-- Never claim smell, taste, internal condition, temperature, or firmness from an image.
-- Describe uncertainty when evidence is insufficient.
-- Do not automatically call multiple products a "batch".
-- Include estimated centimeter size only when reasonably possible.
-- estimatedSize must NEVER be a percentage.
-- Prefer an estimated range instead of false precision.
-- score must be 0-100.
-- freshness must be 0-100.
-- color must be 0-100.
-- surface must be 0-100.
-- damage must be 0-100.
-- sizeScore must be 0-100.
-- quality must be exactly "Good Quality" or "Bad Quality".
-- grade must be exactly "Good" or "Bad".
-- suggestedDecision must be exactly "ACCEPTED" or "REJECTED".
-- suggestedReason must be empty when ACCEPTED.
 `;
-
-      /* =====================================================
-         GEMINI REQUEST
-      ====================================================== */
-
       const url =
         `https://generativelanguage.googleapis.com/v1beta/models/` +
         `${encodeURIComponent(model)}:generateContent`;
@@ -2071,10 +1633,6 @@ FINAL RULES
         await response.json();
 
 
-      /* =====================================================
-         GEMINI ERRORS
-      ====================================================== */
-
       if (!response.ok) {
 
         const googleMessage =
@@ -2144,10 +1702,6 @@ FINAL RULES
 
       }
 
-
-      /* =====================================================
-         READ GEMINI RESULT
-      ====================================================== */
 
       const text =
         payload
@@ -2219,10 +1773,6 @@ FINAL RULES
       }
 
 
-      /* =====================================================
-         CLEAN GEMINI RESULT
-      ====================================================== */
-
       result.product =
         typeof result.product ===
           "string" &&
@@ -2272,10 +1822,6 @@ FINAL RULES
             .damage
         );
 
-
-      /* =====================================================
-         SIZE
-      ====================================================== */
 
       result.sizeScore =
         clampScore(
@@ -2350,10 +1896,6 @@ FINAL RULES
           ? result.sizeAnalysis.trim()
           : "Size could not be reliably assessed from the visible image.";
 
-
-      /* =====================================================
-         QUALITY
-      ====================================================== */
 
       result.quality =
         result.quality ===
@@ -2466,6 +2008,11 @@ app.post(
 
         receiving,
 
+        /* NEW */
+        quantity,
+
+        uom,
+
         received,
 
         expiry,
@@ -2501,6 +2048,82 @@ app.post(
       const id =
         Date.now();
 
+
+      /* =====================================================
+         QUANTITY / UOM VALIDATION
+      ====================================================== */
+
+      const quantityNumber =
+        Number(
+          quantity
+        );
+
+
+      if (
+        !Number.isFinite(
+          quantityNumber
+        ) ||
+        quantityNumber <= 0
+      ) {
+
+        return res
+          .status(400)
+          .json({
+
+            error:
+              "Quantity must be greater than 0."
+
+          });
+
+      }
+
+
+      const finalUom =
+        String(
+          uom || ""
+        )
+          .trim()
+          .toUpperCase();
+
+
+      const allowedUoms =
+        [
+          "KG",
+          "GRAM",
+          "PCS",
+          "BOX",
+          "CRATE",
+          "BAG",
+          "BUNCH",
+          "TRAY",
+          "LITER",
+          "ML",
+          "PUNNET",
+          "PKTS"
+        ];
+
+
+      if (
+        !allowedUoms.includes(
+          finalUom
+        )
+      ) {
+
+        return res
+          .status(400)
+          .json({
+
+            error:
+              "Please select a valid UOM."
+
+          });
+
+      }
+
+
+      /* =====================================================
+         SUPPLIER RATING
+      ====================================================== */
 
       const ratingNumber =
         Number(
@@ -2593,6 +2216,16 @@ app.post(
 
         receiving_type:
           receiving || "",
+
+
+        /* QUANTITY / UOM */
+
+        quantity:
+          quantityNumber,
+
+
+        uom:
+          finalUom,
 
 
         received_date:
@@ -2698,11 +2331,6 @@ app.post(
 
       }
 
-
-      /*
-        Reset QC Memory cache after a new inspection
-        so future analysis can learn from the new record.
-      */
 
       qcMemoryCache =
         "";

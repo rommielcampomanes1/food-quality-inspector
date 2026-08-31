@@ -248,6 +248,49 @@ function safeEstimatedSize(
 
 
 /* =========================================================
+   QUANTITY / UOM DISPLAY
+========================================================= */
+
+function getQuantityDisplay(
+  quantity,
+  uom
+) {
+
+  const quantityValue =
+    quantity === null ||
+    quantity === undefined ||
+    quantity === ""
+      ? ""
+      : String(quantity);
+
+
+  const uomValue =
+    String(
+      uom || ""
+    ).trim();
+
+
+  if (
+    !quantityValue &&
+    !uomValue
+  ) {
+
+    return "--";
+
+  }
+
+
+  return [
+    quantityValue,
+    uomValue
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+}
+
+
+/* =========================================================
    LOAD INSPECTION DETAILS
 ========================================================= */
 
@@ -337,6 +380,13 @@ async function loadDetails() {
     const stars =
       getStarRating(
         supplierRating
+      );
+
+
+    const quantityDisplay =
+      getQuantityDisplay(
+        record.quantity,
+        record.uom
       );
 
 
@@ -490,6 +540,19 @@ async function loadDetails() {
 
           <b>
             ${escapeHtml(record.lpo)}
+          </b>
+
+        </div>
+
+
+        <div>
+
+          <span>
+            Quantity
+          </span>
+
+          <b>
+            ${escapeHtml(quantityDisplay)}
           </b>
 
         </div>
