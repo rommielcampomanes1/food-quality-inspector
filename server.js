@@ -325,8 +325,6 @@ function mapInspectionRow(
       row.receiving_type || "",
 
 
-    /* QUANTITY / UOM */
-
     quantity:
       row.quantity === null ||
       row.quantity === undefined
@@ -374,8 +372,6 @@ function mapInspectionRow(
       {},
 
 
-    /* SIZE */
-
     sizeScore:
       Number(
         row.size_score
@@ -396,8 +392,6 @@ function mapInspectionRow(
       row.estimated_size ||
       "Unable to Estimate",
 
-
-    /* SUPPLIER STAR RATING */
 
     supplierRating:
       Number(
@@ -568,7 +562,7 @@ let qcMemoryCacheTime =
   0;
 
 const QC_MEMORY_CACHE_MS =
-  5 * 60 * 1000;
+  30 * 60 * 1000;
 
 
 /* =========================================================
@@ -620,7 +614,7 @@ async function buildQcMemory() {
           }
         )
         .limit(
-          300
+          150
         );
 
 
@@ -663,9 +657,7 @@ async function buildQcMemory() {
           .toLowerCase();
 
 
-      if (
-        !normalizedProduct
-      ) {
+      if (!normalizedProduct) {
 
         continue;
 
@@ -795,9 +787,7 @@ async function buildQcMemory() {
         ).trim();
 
 
-      if (
-        classification
-      ) {
+      if (classification) {
 
         item.classifications[
           classification
@@ -848,9 +838,7 @@ async function buildQcMemory() {
         ).trim();
 
 
-      if (
-        reason
-      ) {
+      if (reason) {
 
         item.rejectionReasons[
           reason
@@ -979,7 +967,7 @@ async function buildQcMemory() {
       profiles
         .slice(
           0,
-          20
+          10
         )
         .map(
           (profile) => {
@@ -1079,6 +1067,423 @@ async function buildQcMemory() {
 
 
 /* =========================================================
+   GEMINI RETRY / FALLBACK HELPERS
+========================================================= */
+
+function sleep(
+  milliseconds
+) {
+
+  return new Promise(
+    (resolve) => {
+
+      setTimeout(
+        resolve,
+        milliseconds
+      );
+
+    }
+  );
+
+}
+
+
+function isTemporaryGeminiError(
+  status
+) {
+
+  return [
+    429,
+    500,
+    502,
+    503,
+    504
+  ].includes(
+    Number(status)
+  );
+
+}
+
+
+/* =========================================================
+   CALL ONE GEMINI MODEL
+========================================================= */
+
+async function callGeminiModel(
+  {
+    model,
+    apiKey,
+    prompt,
+    mimeType,
+    imageData,
+    timeoutMs = 15000
+  }
+) {
+
+  const url =
+    `https://generativelanguage.googleapis.com/v1beta/models/` +
+    `${encodeURIComponent(model)}:generateContent`;
+
+
+  console.log(
+    `Trying Gemini model: ${model}`
+  );
+
+
+  const controller =
+    new AbortController();
+
+
+  const timeoutId =
+    setTimeout(
+      () => {
+
+        controller.abort();
+
+      },
+      timeoutMs
+    );
+
+
+  try {
+
+    const response =
+      await fetch(
+        url,
+        {
+
+          method:
+            "POST",
+
+          signal:
+            controller.signal,
+
+          headers: {
+
+            "Content-Type":
+              "application/json",
+
+            "x-goog-api-key":
+              apiKey
+
+          },
+
+          body:
+            JSON.stringify({
+
+              contents: [
+                {
+
+                  role:
+                    "user",
+
+                  parts: [
+                    {
+
+                      text:
+                        prompt
+
+                    },
+
+                    {
+
+                      inline_data: {
+
+                        mime_type:
+                          mimeType,
+
+                        data:
+                          imageData
+
+                      }
+
+                    }
+                  ]
+
+                }
+              ],
+
+              generationConfig: {
+
+                responseMimeType:
+                  "application/json",
+
+                temperature:
+                  0.2
+
+              }
+
+            })
+
+        }
+      );
+
+
+    let payload =
+      {};
+
+
+    try {
+
+      payload =
+        await response.json();
+
+    }
+
+    catch {
+
+      payload =
+        {};
+
+    }
+
+
+    if (!response.ok) {
+
+      const googleMessage =
+        payload
+          ?.error
+          ?.message ||
+        payload
+          ?.error
+          ?.status ||
+        `Gemini request failed with HTTP ${response.status}.`;
+
+
+      const requestError =
+        new Error(
+          googleMessage
+        );
+
+
+      requestError.status =
+        response.status;
+
+
+      requestError.model =
+        model;
+
+
+      throw requestError;
+
+    }
+
+
+    const text =
+      payload
+        ?.candidates?.[0]
+        ?.content?.parts
+        ?.map(
+          (part) =>
+            part.text || ""
+        )
+        .join("")
+        .trim();
+
+
+    if (!text) {
+
+      const emptyError =
+        new Error(
+          "Gemini returned an empty result."
+        );
+
+
+      emptyError.status =
+        502;
+
+
+      emptyError.model =
+        model;
+
+
+      throw emptyError;
+
+    }
+
+
+    console.log(
+      `Gemini analysis successful using ${model}`
+    );
+
+
+    return {
+
+      text,
+
+      model
+
+    };
+
+  }
+
+  catch (error) {
+
+    if (
+      error.name ===
+      "AbortError"
+    ) {
+
+      const timeoutError =
+        new Error(
+          `${model} took too long to respond.`
+        );
+
+
+      timeoutError.status =
+        504;
+
+
+      timeoutError.model =
+        model;
+
+
+      throw timeoutError;
+
+    }
+
+
+    throw error;
+
+  }
+
+  finally {
+
+    clearTimeout(
+      timeoutId
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   GEMINI AUTOMATIC RETRY + FALLBACK
+========================================================= */
+
+async function analyzeWithGeminiFallback(
+  {
+    apiKey,
+    preferredModel,
+    prompt,
+    mimeType,
+    imageData
+  }
+) {
+
+  const models =
+    [
+      preferredModel,
+    ]
+      .filter(
+        Boolean
+      )
+      .filter(
+        (
+          model,
+          index,
+          array
+        ) =>
+          array.indexOf(
+            model
+          ) === index
+      );
+
+
+  let lastError =
+    null;
+
+
+  for (
+    let index = 0;
+    index < models.length;
+    index++
+  ) {
+
+    const model =
+      models[index];
+
+
+    try {
+
+      const timeoutMs = 60000;
+
+      console.log(
+        `Gemini model attempt: ${model}`
+      );
+
+
+      return await callGeminiModel(
+        {
+
+          model,
+
+          apiKey,
+
+          prompt,
+
+          mimeType,
+
+          imageData,
+
+          timeoutMs
+
+        }
+      );
+
+    }
+
+    catch (error) {
+
+      lastError =
+        error;
+
+
+      console.error(
+        `Gemini failed | model=${model} | status=${error.status || "unknown"} | ${error.message}`
+      );
+
+
+      if (
+        error.status ===
+          401 ||
+        error.status ===
+          403
+      ) {
+
+        throw error;
+
+      }
+
+
+      if (
+        index <
+        models.length - 1
+      ) {
+
+        console.log(
+          `Switching immediately to backup model: ${models[index + 1]}`
+        );
+
+      }
+
+    }
+
+  }
+
+
+  throw (
+    lastError ||
+    new Error(
+      "All Gemini models failed."
+    )
+  );
+
+}
+
+
+/* =========================================================
    GEMINI IMAGE ANALYSIS
 ========================================================= */
 
@@ -1097,7 +1502,7 @@ app.post(
           ?.trim();
 
 
-      const model =
+      const preferredModel =
         process.env
           .GEMINI_MODEL
           ?.trim() ||
@@ -1248,10 +1653,45 @@ Use natural wording based on the image.
 ANALYZE EVERYTHING CLEARLY VISIBLE
 =========================================================
 
-Inspect all clearly visible pieces of the main food product.
+Inspect ALL clearly visible pieces of the main food product.
 
-If multiple pieces of the same product are clearly visible,
-consider all of them.
+If multiple pieces of the same product are visible,
+evaluate the WHOLE visible group.
+
+Do NOT judge the image using only one piece.
+
+Do NOT focus only on:
+
+- the largest piece
+- the nearest piece
+- the clearest piece
+- the best-looking piece
+- the worst-looking piece
+
+Consider the condition of all clearly visible pieces.
+
+If both good and defective products are visible,
+the overall assessment must represent the complete
+visible group.
+
+Do not ignore visible defective products simply because
+many other pieces appear acceptable.
+
+At the same time, do not automatically reject the entire
+visible group because of one very small isolated cosmetic
+defect.
+
+Consider how widespread and how severe the visible
+defects appear to be.
+
+If many pieces show the same defect,
+give that defect greater importance.
+
+If only a small minority appears affected,
+describe that honestly in the assessment.
+
+If products overlap or are hidden,
+evaluate only what is actually visible.
 
 If only one product is visible,
 inspect that individual product.
@@ -1461,6 +1901,13 @@ When relevant, discuss:
 - visible defects
 - overall quality
 
+When multiple pieces are visible,
+the assessment must represent the entire visible group,
+not only one individual product.
+
+If quality varies across the visible products,
+mention that variation naturally.
+
 Do not mention historical QC data or QC Memory.
 
 The output must sound like a direct assessment of
@@ -1474,6 +1921,15 @@ OVERALL SCORE
 score must be between 0 and 100.
 
 Use the full score range when justified.
+
+When multiple pieces are visible,
+the score must represent their overall visible condition.
+
+A small number of minor defects should reduce the score
+proportionally.
+
+Repeated or severe defects across multiple visible pieces
+should reduce the score more significantly.
 
 
 =========================================================
@@ -1556,125 +2012,51 @@ Return ONLY valid JSON.
   "suggestedReason": ""
 }
 `;
-      const url =
-        `https://generativelanguage.googleapis.com/v1beta/models/` +
-        `${encodeURIComponent(model)}:generateContent`;
 
 
-      const response =
-        await fetch(
-          url,
-          {
+      let geminiResponse;
 
-            method:
-              "POST",
 
-            headers: {
+      try {
 
-              "Content-Type":
-                "application/json",
+        geminiResponse =
+          await analyzeWithGeminiFallback(
+            {
 
-              "x-goog-api-key":
-                apiKey
+              apiKey,
 
-            },
+              preferredModel,
 
-            body:
-              JSON.stringify({
+              prompt,
 
-                contents: [
-                  {
+              mimeType,
 
-                    role:
-                      "user",
+              imageData:
+                data
 
-                    parts: [
-                      {
+            }
+          );
 
-                        text:
-                          prompt
+      }
 
-                      },
+      catch (error) {
 
-                      {
-
-                        inline_data: {
-
-                          mime_type:
-                            mimeType,
-
-                          data
-
-                        }
-
-                      }
-                    ]
-
-                  }
-                ],
-
-                generationConfig: {
-
-                  responseMimeType:
-                    "application/json",
-
-                  temperature:
-                    0.2
-
-                }
-
-              })
-
-          }
+        console.error(
+          "All Gemini attempts failed:",
+          error
         );
 
 
-      const payload =
-        await response.json();
-
-
-      if (!response.ok) {
-
-        const googleMessage =
-          payload
-            ?.error
-            ?.message ||
-          payload
-            ?.error
-            ?.status ||
-          "Gemini analysis failed.";
-
-
         if (
-          response.status ===
-          429
-        ) {
-
-          return res
-            .status(429)
-            .json({
-
-              error:
-                "Gemini quota exceeded. Please wait briefly and try again.",
-
-              details:
-                googleMessage
-
-            });
-
-        }
-
-
-        if (
-          response.status ===
+          error.status ===
             401 ||
-          response.status ===
+          error.status ===
             403
         ) {
 
           return res
             .status(
-              response.status
+              error.status
             )
             .json({
 
@@ -1682,7 +2064,48 @@ Return ONLY valid JSON.
                 "The Gemini API key is invalid, restricted, expired, or not authorized.",
 
               details:
-                googleMessage
+                error.message
+
+            });
+
+        }
+
+
+        if (
+          error.status ===
+          429
+        ) {
+
+          return res
+            .status(503)
+            .json({
+
+              error:
+                "The AI inspection service is temporarily busy. Please try again in a moment.",
+
+              details:
+                error.message
+
+            });
+
+        }
+
+
+        if (
+          isTemporaryGeminiError(
+            error.status
+          )
+        ) {
+
+          return res
+            .status(503)
+            .json({
+
+              error:
+                "The AI inspection service is temporarily unavailable. Please try again shortly.",
+
+              details:
+                error.message
 
             });
 
@@ -1690,13 +2113,12 @@ Return ONLY valid JSON.
 
 
         return res
-          .status(
-            response.status
-          )
+          .status(500)
           .json({
 
             error:
-              googleMessage
+              error.message ||
+              "AI analysis failed."
 
           });
 
@@ -1704,24 +2126,7 @@ Return ONLY valid JSON.
 
 
       const text =
-        payload
-          ?.candidates?.[0]
-          ?.content?.parts
-          ?.map(
-            (part) =>
-              part.text || ""
-          )
-          .join("")
-          .trim();
-
-
-      if (!text) {
-
-        throw new Error(
-          "Gemini returned an empty result."
-        );
-
-      }
+        geminiResponse.text;
 
 
       let result;
@@ -1949,6 +2354,10 @@ Return ONLY valid JSON.
       }
 
 
+      result.aiModelUsed =
+        geminiResponse.model;
+
+
       res.json(
         result
       );
@@ -1977,7 +2386,6 @@ Return ONLY valid JSON.
 
   }
 );
-
 
 /* =========================================================
    SAVE INSPECTION TO SUPABASE
@@ -2008,7 +2416,6 @@ app.post(
 
         receiving,
 
-        /* NEW */
         quantity,
 
         uom,
@@ -2157,11 +2564,19 @@ app.post(
         );
 
 
+      /* =====================================================
+         FPO NUMBER
+      ====================================================== */
+
       const finalLpo =
         await getFinalFpo(
           lpo
         );
 
+
+      /* =====================================================
+         UPLOAD IMAGE
+      ====================================================== */
 
       const {
         publicUrl,
@@ -2176,6 +2591,10 @@ app.post(
       uploadedPath =
         storagePath;
 
+
+      /* =====================================================
+         FINAL DECISION / QUALITY
+      ====================================================== */
 
       const finalDecision =
         decision ===
@@ -2195,6 +2614,10 @@ app.post(
                 : "Good Quality"
             );
 
+
+      /* =====================================================
+         DATABASE RECORD
+      ====================================================== */
 
       const databaseRecord = {
 
@@ -2217,8 +2640,6 @@ app.post(
         receiving_type:
           receiving || "",
 
-
-        /* QUANTITY / UOM */
 
         quantity:
           quantityNumber,
@@ -2292,6 +2713,10 @@ app.post(
       };
 
 
+      /* =====================================================
+         INSERT INTO SUPABASE
+      ====================================================== */
+
       const {
         data,
         error
@@ -2332,12 +2757,20 @@ app.post(
       }
 
 
+      /* =====================================================
+         RESET QC MEMORY CACHE
+      ====================================================== */
+
       qcMemoryCache =
         "";
 
       qcMemoryCacheTime =
         0;
 
+
+      /* =====================================================
+         RETURN SAVED RECORD
+      ====================================================== */
 
       res.json({
 
