@@ -4,10 +4,8 @@ const { createClient } = require("@supabase/supabase-js");
 require("dotenv").config();
 
 const app = express();
-
 const PORT = Number(process.env.PORT) || 3000;
 const ROOT = __dirname;
-
 
 /* =========================================================
    SUPABASE
@@ -19,20 +17,17 @@ const SUPABASE_URL =
 const SUPABASE_SECRET_KEY =
   process.env.SUPABASE_SECRET_KEY?.trim();
 
-
 if (!SUPABASE_URL) {
   throw new Error(
     "SUPABASE_URL is missing in .env"
   );
 }
 
-
 if (!SUPABASE_SECRET_KEY) {
   throw new Error(
     "SUPABASE_SECRET_KEY is missing in .env"
   );
 }
-
 
 const supabase =
   createClient(
@@ -46,10 +41,8 @@ const supabase =
     }
   );
 
-
 const STORAGE_BUCKET =
   "inspection-images";
-
 
 /* =========================================================
    EXPRESS
@@ -61,7 +54,6 @@ app.use(
   })
 );
 
-
 app.use(
   express.static(
     path.join(
@@ -71,13 +63,11 @@ app.use(
   )
 );
 
-
 /* =========================================================
    HTML PAGES
 ========================================================= */
 
 const pages = {
-
   "/":
     "home.html",
 
@@ -92,19 +82,15 @@ const pages = {
 
   "/details":
     "details.html"
-
 };
-
 
 for (
   const [route, file]
   of Object.entries(pages)
 ) {
-
   app.get(
     route,
     (_req, res) => {
-
       res.sendFile(
         path.join(
           ROOT,
@@ -112,12 +98,9 @@ for (
           file
         )
       );
-
     }
   );
-
 }
-
 
 /* =========================================================
    IMAGE HELPERS
@@ -126,29 +109,21 @@ for (
 function parseBase64Image(
   dataUrl
 ) {
-
   if (
     !dataUrl ||
     typeof dataUrl !== "string"
   ) {
-
     return null;
-
   }
-
 
   const match =
     dataUrl.match(
       /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/
     );
 
-
   if (!match) {
-
     return null;
-
   }
-
 
   const mimeType =
     match[1];
@@ -156,36 +131,27 @@ function parseBase64Image(
   const base64Data =
     match[2];
 
-
   let extension =
     "jpg";
-
 
   if (
     mimeType.includes(
       "png"
     )
   ) {
-
     extension =
       "png";
-
   }
-
   else if (
     mimeType.includes(
       "webp"
     )
   ) {
-
     extension =
       "webp";
-
   }
 
-
   return {
-
     mimeType,
 
     extension,
@@ -195,11 +161,8 @@ function parseBase64Image(
         base64Data,
         "base64"
       )
-
   };
-
 }
-
 
 /* =========================================================
    UPLOAD IMAGE TO SUPABASE STORAGE
@@ -209,29 +172,20 @@ async function uploadInspectionImage(
   dataUrl,
   id
 ) {
-
   const image =
     parseBase64Image(
       dataUrl
     );
 
-
   if (!image) {
-
     return {
-
       publicUrl: "",
-
       storagePath: ""
-
     };
-
   }
-
 
   const storagePath =
     `inspections/inspection-${id}.${image.extension}`;
-
 
   const {
     error: uploadError
@@ -245,25 +199,19 @@ async function uploadInspectionImage(
         storagePath,
         image.buffer,
         {
-
           contentType:
             image.mimeType,
 
           upsert:
             false
-
         }
       );
 
-
   if (uploadError) {
-
     throw new Error(
       `Image upload failed: ${uploadError.message}`
     );
-
   }
-
 
   const {
     data
@@ -277,18 +225,13 @@ async function uploadInspectionImage(
         storagePath
       );
 
-
   return {
-
     publicUrl:
       data?.publicUrl || "",
 
     storagePath
-
   };
-
 }
-
 
 /* =========================================================
    DATABASE ROW → FRONTEND FORMAT
@@ -297,33 +240,25 @@ async function uploadInspectionImage(
 function mapInspectionRow(
   row
 ) {
-
   return {
-
     id:
       row.id,
-
 
     image:
       row.image_url || "",
 
-
     lpo:
       row.lpo_number || "",
-
 
     product:
       row.product_name ||
       "Unknown Product",
 
-
     supplier:
       row.supplier_farm || "",
 
-
     receiving:
       row.receiving_type || "",
-
 
     quantity:
       row.quantity === null ||
@@ -331,29 +266,23 @@ function mapInspectionRow(
         ? null
         : Number(row.quantity),
 
-
     uom:
       row.uom || "",
-
 
     received:
       row.received_date || "",
 
-
     expiry:
       row.expiry_date || "",
-
 
     score:
       Number(
         row.quality_score
       ) || 0,
 
-
     quality:
       row.quality_result ||
       "Good Quality",
-
 
     grade:
       row.quality_result ===
@@ -361,43 +290,35 @@ function mapInspectionRow(
         ? "Bad"
         : "Good",
 
-
     analysis:
       row.quality_analysis ||
       "",
 
-
     indicators:
       row.quality_indicators ||
       {},
-
 
     sizeScore:
       Number(
         row.size_score
       ) || 0,
 
-
     sizeClassification:
       row.size_classification ||
       "Not Determined",
-
 
     sizeAnalysis:
       row.size_analysis ||
       "",
 
-
     estimatedSize:
       row.estimated_size ||
       "Unable to Estimate",
-
 
     supplierRating:
       Number(
         row.supplier_rating
       ) || 0,
-
 
     decision:
       row.quality_result ===
@@ -405,19 +326,14 @@ function mapInspectionRow(
         ? "REJECTED"
         : "ACCEPTED",
 
-
     reason:
       row.reason_rejection ||
       "",
 
-
     createdAt:
       row.created_at
-
   };
-
 }
-
 
 /* =========================================================
    FPO FORMATTER
@@ -426,15 +342,12 @@ function mapInspectionRow(
 async function getFinalFpo(
   enteredValue
 ) {
-
   const raw =
     String(
       enteredValue || ""
     ).trim();
 
-
   if (raw) {
-
     const cleaned =
       raw
         .replace(
@@ -450,17 +363,12 @@ async function getFinalFpo(
           ""
         );
 
-
     if (cleaned) {
-
       return (
         `FPO2027${cleaned}`
       );
-
     }
-
   }
-
 
   const {
     data,
@@ -478,25 +386,19 @@ async function getFinalFpo(
         "FPO2027%"
       );
 
-
   if (error) {
-
     throw new Error(
       `Unable to generate FPO number: ${error.message}`
     );
-
   }
-
 
   let highest =
     0;
-
 
   for (
     const record
     of data || []
   ) {
-
     const match =
       String(
         record.lpo_number || ""
@@ -505,40 +407,30 @@ async function getFinalFpo(
           /^FPO2027(\d{4})$/i
         );
 
-
     if (!match) {
-
       continue;
-
     }
-
 
     const number =
       Number(
         match[1]
       );
 
-
     if (
       Number.isFinite(
         number
       )
     ) {
-
       highest =
         Math.max(
           highest,
           number
         );
-
     }
-
   }
-
 
   const next =
     highest + 1;
-
 
   return (
     `FPO2027${String(next)
@@ -547,9 +439,7 @@ async function getFinalFpo(
         "0"
       )}`
   );
-
 }
-
 
 /* =========================================================
    QC MEMORY CACHE
@@ -564,29 +454,22 @@ let qcMemoryCacheTime =
 const QC_MEMORY_CACHE_MS =
   30 * 60 * 1000;
 
-
 /* =========================================================
    QC MEMORY
 ========================================================= */
 
 async function buildQcMemory() {
-
   try {
-
     const now =
       Date.now();
-
 
     if (
       qcMemoryCache &&
       now - qcMemoryCacheTime <
         QC_MEMORY_CACHE_MS
     ) {
-
       return qcMemoryCache;
-
     }
-
 
     const {
       data,
@@ -617,38 +500,29 @@ async function buildQcMemory() {
           150
         );
 
-
     if (error) {
-
       console.error(
         "QC Memory load error:",
         error.message
       );
 
       return "";
-
     }
-
 
     if (
       !Array.isArray(data) ||
       data.length === 0
     ) {
-
       return "";
-
     }
-
 
     const products =
       new Map();
-
 
     for (
       const row
       of data
     ) {
-
       const normalizedProduct =
         String(
           row.product_name || ""
@@ -656,24 +530,18 @@ async function buildQcMemory() {
           .trim()
           .toLowerCase();
 
-
       if (!normalizedProduct) {
-
         continue;
-
       }
-
 
       if (
         !products.has(
           normalizedProduct
         )
       ) {
-
         products.set(
           normalizedProduct,
           {
-
             name:
               row.product_name,
 
@@ -706,63 +574,47 @@ async function buildQcMemory() {
 
             estimatedSizes:
               []
-
           }
         );
-
       }
-
 
       const item =
         products.get(
           normalizedProduct
         );
 
-
       item.count++;
-
 
       if (
         row.quality_result ===
         "Bad Quality"
       ) {
-
         item.rejected++;
-
       }
-
       else {
-
         item.accepted++;
-
       }
-
 
       const score =
         Number(
           row.quality_score
         );
 
-
       if (
         Number.isFinite(
           score
         )
       ) {
-
         item.scoreTotal +=
           score;
 
         item.scoreCount++;
-
       }
-
 
       const rating =
         Number(
           row.supplier_rating
         );
-
 
       if (
         Number.isFinite(
@@ -771,14 +623,11 @@ async function buildQcMemory() {
         rating >= 1 &&
         rating <= 5
       ) {
-
         item.ratingTotal +=
           rating;
 
         item.ratingCount++;
-
       }
-
 
       const classification =
         String(
@@ -786,9 +635,7 @@ async function buildQcMemory() {
           ""
         ).trim();
 
-
       if (classification) {
-
         item.classifications[
           classification
         ] =
@@ -797,9 +644,7 @@ async function buildQcMemory() {
               classification
             ] || 0
           ) + 1;
-
       }
-
 
       const estimatedSize =
         String(
@@ -807,29 +652,23 @@ async function buildQcMemory() {
           ""
         ).trim();
 
-
       if (
         estimatedSize &&
         estimatedSize !==
           "Unable to Estimate"
       ) {
-
         if (
           !item.estimatedSizes
             .includes(
               estimatedSize
             )
         ) {
-
           item.estimatedSizes
             .push(
               estimatedSize
             );
-
         }
-
       }
-
 
       const reason =
         String(
@@ -837,9 +676,7 @@ async function buildQcMemory() {
           ""
         ).trim();
 
-
       if (reason) {
-
         item.rejectionReasons[
           reason
         ] =
@@ -848,29 +685,21 @@ async function buildQcMemory() {
               reason
             ] || 0
           ) + 1;
-
       }
-
     }
-
 
     const profiles =
       [];
-
 
     for (
       const item
       of products.values()
     ) {
-
       if (
         item.count < 3
       ) {
-
         continue;
-
       }
-
 
       const acceptanceRate =
         Math.round(
@@ -880,30 +709,23 @@ async function buildQcMemory() {
           ) * 100
         );
 
-
       const averageScore =
         item.scoreCount > 0
-
           ? Math.round(
               item.scoreTotal /
               item.scoreCount
             )
-
           : null;
-
 
       const averageRating =
         item.ratingCount > 0
-
           ? (
               item.ratingTotal /
               item.ratingCount
             ).toFixed(
               1
             )
-
           : null;
-
 
       const commonClassification =
         Object.entries(
@@ -915,7 +737,6 @@ async function buildQcMemory() {
           )[0]?.[0] ||
         "";
 
-
       const commonReason =
         Object.entries(
           item.rejectionReasons
@@ -926,9 +747,7 @@ async function buildQcMemory() {
           )[0]?.[0] ||
         "";
 
-
       profiles.push({
-
         name:
           item.name,
 
@@ -951,17 +770,13 @@ async function buildQcMemory() {
               0,
               3
             )
-
       });
-
     }
-
 
     profiles.sort(
       (a, b) =>
         b.count - a.count
     );
-
 
     const memoryLines =
       profiles
@@ -971,100 +786,72 @@ async function buildQcMemory() {
         )
         .map(
           (profile) => {
-
             let line =
               `Product: ${profile.name}` +
               ` | Previous inspections: ${profile.count}` +
               ` | Acceptance rate: ${profile.acceptanceRate}%`;
 
-
             if (
               profile.averageScore !==
               null
             ) {
-
               line +=
                 ` | Average previous quality score: ${profile.averageScore}%`;
-
             }
-
 
             if (
               profile.averageRating !==
               null
             ) {
-
               line +=
                 ` | Average human supplier rating: ${profile.averageRating}/5`;
-
             }
-
 
             if (
               profile.commonClassification
             ) {
-
               line +=
                 ` | Common size classification: ${profile.commonClassification}`;
-
             }
-
 
             if (
               profile.commonReason
             ) {
-
               line +=
                 ` | Common rejection reason: ${profile.commonReason}`;
-
             }
-
 
             if (
               profile.estimatedSizes.length > 0
             ) {
-
               line +=
                 ` | Previous estimated sizes: ` +
                 profile.estimatedSizes.join(", ");
-
             }
 
-
             return line;
-
           }
         );
-
 
     qcMemoryCache =
       memoryLines.join(
         "\n"
       );
 
-
     qcMemoryCacheTime =
       now;
 
-
     return qcMemoryCache;
-
   }
-
   catch (error) {
-
     console.error(
       "QC Memory error:",
       error
     );
 
-
     return "";
-
   }
-
 }
-
 
 /* =========================================================
    GEMINI RETRY / FALLBACK HELPERS
@@ -1073,25 +860,19 @@ async function buildQcMemory() {
 function sleep(
   milliseconds
 ) {
-
   return new Promise(
     (resolve) => {
-
       setTimeout(
         resolve,
         milliseconds
       );
-
     }
   );
-
 }
-
 
 function isTemporaryGeminiError(
   status
 ) {
-
   return [
     429,
     500,
@@ -1101,9 +882,7 @@ function isTemporaryGeminiError(
   ].includes(
     Number(status)
   );
-
 }
-
 
 /* =========================================================
    CALL ONE GEMINI MODEL
@@ -1119,39 +898,30 @@ async function callGeminiModel(
     timeoutMs = 15000
   }
 ) {
-
   const url =
     `https://generativelanguage.googleapis.com/v1beta/models/` +
     `${encodeURIComponent(model)}:generateContent`;
-
 
   console.log(
     `Trying Gemini model: ${model}`
   );
 
-
   const controller =
     new AbortController();
-
 
   const timeoutId =
     setTimeout(
       () => {
-
         controller.abort();
-
       },
       timeoutMs
     );
 
-
   try {
-
     const response =
       await fetch(
         url,
         {
-
           method:
             "POST",
 
@@ -1159,87 +929,63 @@ async function callGeminiModel(
             controller.signal,
 
           headers: {
-
             "Content-Type":
               "application/json",
 
             "x-goog-api-key":
               apiKey
-
           },
 
           body:
             JSON.stringify({
-
               contents: [
                 {
-
                   role:
                     "user",
 
                   parts: [
                     {
-
                       text:
                         prompt
-
                     },
 
                     {
-
                       inline_data: {
-
                         mime_type:
                           mimeType,
 
                         data:
                           imageData
-
                       }
-
                     }
                   ]
-
                 }
               ],
 
               generationConfig: {
-
                 responseMimeType:
                   "application/json",
 
                 temperature:
                   0.2
-
               }
-
             })
-
         }
       );
-
 
     let payload =
       {};
 
-
     try {
-
       payload =
         await response.json();
-
     }
-
     catch {
-
       payload =
         {};
-
     }
 
-
     if (!response.ok) {
-
       const googleMessage =
         payload
           ?.error
@@ -1249,25 +995,19 @@ async function callGeminiModel(
           ?.status ||
         `Gemini request failed with HTTP ${response.status}.`;
 
-
       const requestError =
         new Error(
           googleMessage
         );
 
-
       requestError.status =
         response.status;
-
 
       requestError.model =
         model;
 
-
       throw requestError;
-
     }
-
 
     const text =
       payload
@@ -1280,83 +1020,57 @@ async function callGeminiModel(
         .join("")
         .trim();
 
-
     if (!text) {
-
       const emptyError =
         new Error(
           "Gemini returned an empty result."
         );
 
-
       emptyError.status =
         502;
-
 
       emptyError.model =
         model;
 
-
       throw emptyError;
-
     }
-
 
     console.log(
       `Gemini analysis successful using ${model}`
     );
 
-
     return {
-
       text,
-
       model
-
     };
-
   }
-
   catch (error) {
-
     if (
       error.name ===
       "AbortError"
     ) {
-
       const timeoutError =
         new Error(
           `${model} took too long to respond.`
         );
 
-
       timeoutError.status =
         504;
-
 
       timeoutError.model =
         model;
 
-
       throw timeoutError;
-
     }
 
-
     throw error;
-
   }
-
   finally {
-
     clearTimeout(
       timeoutId
     );
-
   }
-
 }
-
 
 /* =========================================================
    GEMINI AUTOMATIC RETRY + FALLBACK
@@ -1371,117 +1085,113 @@ async function analyzeWithGeminiFallback(
     imageData
   }
 ) {
+  const model =
+    preferredModel ||
+    "gemini-3.6-flash";
 
-  const models =
+  const maxAttempts =
+    3;
+
+  const timeoutMs =
+    90000;
+
+  const retryDelays =
     [
-      preferredModel,
-    ]
-      .filter(
-        Boolean
-      )
-      .filter(
-        (
-          model,
-          index,
-          array
-        ) =>
-          array.indexOf(
-            model
-          ) === index
-      );
-
+      2000,
+      4000
+    ];
 
   let lastError =
     null;
 
-
   for (
-    let index = 0;
-    index < models.length;
-    index++
+    let attempt = 1;
+    attempt <= maxAttempts;
+    attempt++
   ) {
-
-    const model =
-      models[index];
-
-
     try {
+      console.log(
+        `Gemini model attempt ${attempt}/${maxAttempts}: ${model}`
+      );
 
-      const timeoutMs = 60000;
+      const result =
+        await callGeminiModel(
+          {
+            model,
+            apiKey,
+            prompt,
+            mimeType,
+            imageData,
+            timeoutMs
+          }
+        );
 
       console.log(
-        `Gemini model attempt: ${model}`
+        `Gemini succeeded on attempt ${attempt}/${maxAttempts} using ${model}`
       );
 
-
-      return await callGeminiModel(
-        {
-
-          model,
-
-          apiKey,
-
-          prompt,
-
-          mimeType,
-
-          imageData,
-
-          timeoutMs
-
-        }
-      );
-
+      return result;
     }
-
     catch (error) {
-
       lastError =
         error;
 
+      const status =
+        Number(
+          error.status
+        ) || 0;
 
       console.error(
-        `Gemini failed | model=${model} | status=${error.status || "unknown"} | ${error.message}`
+        `Gemini failed | attempt=${attempt}/${maxAttempts} | model=${model} | status=${status || "unknown"} | ${error.message}`
       );
 
-
       if (
-        error.status ===
-          401 ||
-        error.status ===
-          403
+        status === 401 ||
+        status === 403
       ) {
-
         throw error;
-
       }
-
 
       if (
-        index <
-        models.length - 1
+        !isTemporaryGeminiError(
+          status
+        )
       ) {
-
-        console.log(
-          `Switching immediately to backup model: ${models[index + 1]}`
-        );
-
+        throw error;
       }
 
-    }
+      if (
+        attempt >= maxAttempts
+      ) {
+        break;
+      }
 
+      const waitMs =
+        retryDelays[
+          attempt - 1
+        ] || 4000;
+
+      console.log(
+        `Temporary Gemini error (${status}). Retrying ${model} in ${waitMs / 1000} seconds...`
+      );
+
+      await sleep(
+        waitMs
+      );
+    }
   }
 
+  console.error(
+    `All ${maxAttempts} Gemini attempts failed for ${model}.`
+  );
 
   throw (
     lastError ||
     new Error(
-      "All Gemini models failed."
+      "All Gemini attempts failed."
     )
   );
-
 }
-
 
 /* =========================================================
    GEMINI IMAGE ANALYSIS
@@ -1493,14 +1203,11 @@ app.post(
     req,
     res
   ) => {
-
     try {
-
       const apiKey =
         process.env
           .GEMINI_API_KEY
           ?.trim();
-
 
       const preferredModel =
         process.env
@@ -1508,26 +1215,19 @@ app.post(
           ?.trim() ||
         "gemini-3.6-flash";
 
-
       if (!apiKey) {
-
         return res
           .status(500)
           .json({
-
             error:
               "GEMINI_API_KEY is missing in .env"
-
           });
-
       }
-
 
       const {
         image
       } =
         req.body;
-
 
       if (
         !image ||
@@ -1535,22 +1235,17 @@ app.post(
           "string" ||
         !image.includes(",")
       ) {
-
         return res
           .status(400)
           .json({
-
             error:
               "A valid image is required."
-
           });
-
       }
-
 
       const [
         header,
-        data
+                data
       ] =
         image.split(
           ",",
